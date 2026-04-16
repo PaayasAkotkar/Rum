@@ -57,7 +57,7 @@ Search-Manager:
 
 
 <div>
-`Quick start:`
+<b>Quick start:</b>
 <br>
 1.Config the minIO user & pass in the compose.yml.
 <br>

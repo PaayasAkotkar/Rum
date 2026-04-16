@@ -54,7 +54,7 @@ Note: keep [In & Out] same for each model so that you can push many profiles.
 <br>
 4. Paper blocks until all registered funcs complete
 <br>
-5. Result carries the full metric report — client decides what to do with it
+5. Result carries the full metric report + output of that func — client decides what to do with it
 </p>
 
 <br>

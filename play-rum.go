@@ -1,5 +1,5 @@
 // Package main...
-// note: the currrent structs are kept so taht you can test with the models 
+// note: the currrent structs are kept so taht you can test with the models
 package main
 
 import (
@@ -84,7 +84,8 @@ const (
 	API   = ""
 )
 
-func testRum() {
+// playRum demonstrates the example of the rum
+func playRum() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
@@ -144,7 +145,8 @@ func testRum() {
 	rumx := rum.New(ctx, store)
 
 	var wg sync.WaitGroup
-
+	// note: it is not ideal and recommended to use this func like this
+	//       it is kept only for demonstration purpose.
 	wg.Add(3)
 	go func() {
 		defer wg.Done()

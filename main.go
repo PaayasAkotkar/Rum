@@ -3,19 +3,25 @@
 package main
 
 import (
-	e "rum/app/search-manager"
 	"context"
 	"encoding/json"
 	"fmt"
 	"log"
+	e "rum/app/search-manager"
 	"sync"
 	"time"
 )
 
 var wg sync.WaitGroup
 
+const (
+	testAddr     = "localhost:19530"
+	denseBucket  = "testBucket"
+	hybridBucket = "htestBucket"
+)
+
 func main() {
-	testRum()
+	playRum()
 }
 
 func dummyObjects() []e.Object {
@@ -56,7 +62,7 @@ func dummyObjects() []e.Object {
 	return m
 }
 
-func testSearch() {
+func playSearch() {
 
 	addr := "localhost:19530"
 
@@ -137,7 +143,7 @@ func testSearch() {
 	log.Println("dense wiped")
 }
 
-func testHybridSearch() {
+func playHybridSearch() {
 	addr := "localhost:19530"
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
@@ -219,12 +225,6 @@ func testHybridSearch() {
 	}
 	log.Println("dense wiped")
 }
-
-const (
-	testAddr     = "localhost:19530"
-	denseBucket  = "testBucket"
-	hybridBucket = "htestBucket"
-)
 
 func testEmbedding() []float32 {
 	em := make([]float32, e.DefaultDim)

@@ -1,5 +1,5 @@
 // Package main...
-// note: the currrent structs are kept so taht you can test with the models if you want
+// note: the currrent structs are kept so taht you can test with the models 
 package main
 
 import (

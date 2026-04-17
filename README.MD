@@ -4,7 +4,7 @@
 </div>
 
 ## Theme 🎨
-Rum provides the robust way to manage many agent models at once.
+RUM [run your models] provides the robust way to manage many agent models at once.
 It allows one single server to handle the flow of stream; the 
 call can be managed via client.
 
@@ -28,7 +28,7 @@ The idea is kept simple — monitor the attributes and allow a robust hierarchy 
 <p align="center">
 <b>The hierarchy:</b>
 <br>
-Rum[In, Out]
+RUM[In, Out]
 <br>
 └── Profile
 <br>
@@ -66,7 +66,7 @@ Client [grpc client anywhere]
 <br>
 ↓ 
 <br>
-Rum Server [grpc server]
+RUM Server [grpc server]
 <br>
 ↓
 <br>
@@ -105,7 +105,7 @@ Server owns the result
 |---|---|---|
 | Embedder | Upcoming | One single embedder for all models |
 | Cluster | Upcoming | One Cluster to scale the service |
-|ServerRum|Upcoming| Reduce complexity for server->client communication |
+|ServerRUM|Upcoming| Reduce complexity for server->client communication |
 <div align="center">
 <footer>@copyright 2026; created with imagination and coded with passion ✏️</footer>
 </div>

@@ -1,6 +1,6 @@
-// Package rum ...
+// Package rumstack
 // Simple Stack implementation
-package rum
+package rumstack
 
 import (
 	"slices"
@@ -53,6 +53,14 @@ func (s *Stack[T]) Oldest() *T {
 	}
 	v := s.data[len(s.data)-1]
 	return &v
+}
+
+func (s *Stack[T]) Max() []T {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := make([]T, s.len())
+	copy(out, s.data)
+	return out
 }
 
 // Range returns a copy of up to limit entries

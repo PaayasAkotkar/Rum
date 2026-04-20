@@ -6,8 +6,10 @@ package rum
 import (
 	"cmp"
 	"fmt"
+	rumstack "rum/app/stack"
 	"slices"
 	"sync"
+	"time"
 )
 
 // IProfile manages active and inactive Kits keyed by ISequence[In]
@@ -15,7 +17,7 @@ type IProfile[In, Out any] struct {
 	mu              sync.Mutex
 	activeProfile   map[string]map[ISequence[In]]*Kit[In, Out]
 	inactiveProfile map[string]map[ISequence[In]]*Kit[In, Out]
-	profileStack    Stack[string]
+	profileStack    rumstack.Stack[string]
 }
 
 func NewProfile[In, Out any]() *IProfile[In, Out] {
@@ -74,7 +76,7 @@ func (r *IProfile[In, Out]) Sort(name string) []*Service[In, Out] {
 
 // set funcs
 
-func (r *IProfile[In, Out]) RegisterProfile(profile ISequence[In], kit *Kit[In, Out]) {
+func (r *IProfile[In, Out]) RegisterProfile(profile ISequence[In], base time.Duration, kit *Kit[In, Out]) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if _, ok := r.activeProfile[profile.Name]; !ok {

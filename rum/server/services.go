@@ -3,10 +3,10 @@
 package rum
 
 import (
-	rumrpc "rum/app/misc/rum"
 	"context"
 	"encoding/json"
 	"log"
+	rumrpc "rum/app/misc/rum"
 	"runtime/debug"
 	"time"
 )
@@ -78,6 +78,7 @@ func (r *Rum[In, Out]) ACTIVATE(ctx context.Context, in *rumrpc.IActivateRequest
 	r.activateProfile <- ILinks[In, Out]{Links: s, Clean: true}
 	return &rumrpc.IActivateResponse{Succeed: true}, nil
 }
+
 func (r *Rum[In, Out]) REMOVESERVICE(ctx context.Context, in *rumrpc.IRemoveServiceRequest) (*rumrpc.IRemoveServiceResponse, error) {
 	var s = make([]ILink[In, Out], 0, len(in.Delete))
 

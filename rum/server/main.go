@@ -22,10 +22,11 @@
 package rum
 
 import (
-	rumrpc "rum/app/misc/rum"
 	"context"
 	"log"
 	"net"
+	rumrpc "rum/app/misc/rum"
+	rumpaint "rum/app/paint"
 	"runtime/debug"
 
 	"google.golang.org/grpc"
@@ -39,8 +40,14 @@ type RumServer struct {
 
 // Serve starts the service
 func (r *Rum[In, Out]) Serve(ctx context.Context, server RumServer) {
-	log.Println("in serve")
-
+	rumpaint.Header(`
+██████╗░██╗░░░██╗███╗░░░███╗
+██╔══██╗██║░░░██║████╗░████║
+██████╔╝██║░░░██║██╔████╔██║
+██╔══██╗██║░░░██║██║╚██╔╝██║
+██║░░██║╚██████╔╝██║░╚═╝░██║
+╚═╝░░╚═╝░╚═════╝░╚═╝░░░░░╚═╝
+	`)
 	network := server.Network
 	address := server.Address
 	opts := server.ServerOptions

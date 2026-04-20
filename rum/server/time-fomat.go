@@ -8,7 +8,6 @@ import "time"
 // the service will be re-activated after the duration (acts as sleep/wake)
 type TimeFormat struct {
 	Call          time.Duration
-	Limit         time.Duration
 	ActivateAfter *time.Duration
 	Deactivate    bool
 	Remove        bool

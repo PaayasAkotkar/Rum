@@ -9,10 +9,13 @@
 package rum
 
 import (
+	rumdog "rum/app/dog"
+	rumstack "rum/app/stack"
 	"context"
 	"encoding/json"
 	"fmt"
 	"log"
+	"sync"
 	"time"
 )
 
@@ -20,20 +23,29 @@ import (
 type Dispatcher[in, out any] struct {
 	registry   map[string]IRegister[in, out]
 	rinput     map[string]in
-	events     Stack[string]
+	Settings   Settings
+	events     rumstack.Stack[string]
 	result     map[string]*IDispatchResult
 	isComplete map[string]bool
 	metric     map[string]map[int]IAgentResp // name -> count -> resp
+	wg         sync.WaitGroup
 }
 
-func NewDispatcher[in, out any]() *Dispatcher[in, out] {
+func NewDispatcher[in, out any](settings Settings) *Dispatcher[in, out] {
 	return &Dispatcher[in, out]{
 		registry:   make(map[string]IRegister[in, out]),
 		rinput:     make(map[string]in),
+		Settings:   settings,
 		result:     make(map[string]*IDispatchResult),
 		isComplete: make(map[string]bool),
 		metric:     make(map[string]map[int]IAgentResp),
 	}
+}
+
+type Settings struct {
+	Base      time.Duration
+	SleepTime time.Duration
+	Dog       rumdog.Settings
 }
 
 // IAgentResp holds per-call metric data
@@ -119,51 +131,106 @@ func (d *Dispatcher[in, out]) call(ctx context.Context, name string, input in, p
 		max = policy.Max + 1 // +1 so Max=3 means 1 original + 3 retries
 		interval = policy.Interval
 	}
-	log.Println("max: ", max)
 
-	var lastErr error
+	log.Println("max: ", max)
+	t := d.Settings.Base
+	if t == 0 {
+		t = 10 * time.Second
+	}
+	ts := d.Settings.SleepTime
+	if ts == 0 {
+		ts = 100 * time.Millisecond
+	}
+
+	dog := rumdog.New[out](t)
+	dog.Watch()
+	defer dog.Shutdown()
+
+	p := rumdog.NewPolicy[out](d.Settings.Base)
+	p.Name = name
+	p.AddFunc(rumdog.Funcs[out]{
+		Name: name,
+		Fn: func() (*out, error) {
+			time.Sleep(ts)
+			resp, err := fn.Fn(ctx, input)
+			return &resp, err
+		},
+	})
+
+	if err := dog.Register(p); err != nil {
+		return err
+	}
+	if err := dog.ParkDog(name); err != nil {
+		return err
+	}
+
 	for attempt := range max {
 		if attempt > 0 {
 			select {
 			case <-ctx.Done():
-				return ctx.Err()
+				return fmt.Errorf("max retry exceed")
 			case <-time.After(interval):
 			}
 		}
 
 		start := time.Now()
-		res, err := fn.Fn(ctx, input)
+		res, err := p.Fn[0].Fn()
 		elapsed := time.Since(start)
 
-		if err == nil {
-			// success — write metric and result, return
-			b, _ := json.Marshal(res)
-			c, _ := json.Marshal(input)
-			d.writeMetric(name, IAgentResp{Succeed: &IMetricAgentSucceed{
-				TimeTaken:     elapsed,
-				AgentReply:    string(b),
-				ClientRequest: string(c),
-				At:            time.Now(),
-			}})
-			r := NewDispatchResult()
-			r.IsReady = true
-			r.Result = b
-
-			d.handleOutput(name, r)
-			d.handleComplete(name, true)
-			d.handleInput(name, input)
-			return nil
+		if err != nil {
+			dog.Bark(rumdog.IBark{
+				Policy: name,
+				Reason: err.Error(),
+			})
+		} else {
+			dog.Done(rumdog.IDone{
+				PolicyName:   name,
+				FuncName:     name,
+				Rank:         1,
+				FuncDuration: elapsed,
+			})
 		}
 
-		// record each failure attempt
-		d.writeMetric(name, IAgentResp{Fail: &IMetricAgentFail{
-			At:     time.Now(),
-			Reason: fmt.Sprintf("attempt %d: %s", attempt+1, err.Error()),
-		}})
-		lastErr = err
+		d.wg.Add(1)
+		go func() {
+			defer d.wg.Done()
+			report := dog.Pakkun(name)
+			if report != nil && report.IsReady() {
+				log.Println("report: ", report)
+
+				if err == nil {
+					// success — write metric and result, return
+					b, _ := json.Marshal(res)
+					c, _ := json.Marshal(input)
+					d.writeMetric(name, IAgentResp{Succeed: &IMetricAgentSucceed{
+						TimeTaken:     elapsed,
+						AgentReply:    string(b),
+						ClientRequest: string(c),
+						At:            time.Now(),
+					}})
+					r := NewDispatchResult()
+					r.IsReady = true
+					r.Result = b
+
+					d.handleOutput(name, r)
+					d.handleComplete(name, true)
+					d.handleInput(name, input)
+					return
+				}
+				// record each failure attempt
+				d.writeMetric(name, IAgentResp{Fail: &IMetricAgentFail{
+					At:     time.Now(),
+					Reason: fmt.Sprintf("attempt %d: %s", attempt+1, err.Error()),
+				}})
+
+				// lastErr = err
+			}
+		}()
+		time.Sleep(ts)
+		d.wg.Wait()
 	}
 
-	return lastErr
+	return nil
 }
 
 func (d *Dispatcher[in, out]) writeMetric(name string, resp IAgentResp) {

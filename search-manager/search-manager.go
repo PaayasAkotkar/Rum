@@ -284,7 +284,7 @@ func (m *SearchManager) insertAndReport(
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("--- Push Report [%s] ---\n", bucket))
 	sb.WriteString(fmt.Sprintf("Total Records: %d\n", len(ids)))
-	sb.WriteString("Storage Format: Columnar (LSM-Tree based)\n\n")
+	sb.WriteString("Storume Format: Columnar (LSM-Tree based)\n\n")
 	for i := range ids {
 		sb.WriteString(fmt.Sprintf("[%d] ID: %s | Type: %s | Branch: %s\n",
 			i, ids[i], docTypes[i], branches[i]))

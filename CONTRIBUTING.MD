@@ -12,7 +12,7 @@ RUM/Server:
 - **Cluster.go:**
                   - work-in-progress 🚧
 - **Dispatch.go**
-                  - core to handle the function registry.
+                  - core to handle the function registry
 - **Handler.go:** 
                   - implements the manipulation of the stream
 - **Hub.go:**

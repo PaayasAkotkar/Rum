@@ -43,7 +43,7 @@ func baseSchema(defaultCol string, dim int) *entity.Schema {
 	}
 	return &entity.Schema{
 		CollectionName: defaultCol,
-		Description:    "rag search engine",
+		Description:    "rum search engine",
 		AutoID:         false,
 		Fields: []*entity.Field{
 			{

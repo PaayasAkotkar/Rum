@@ -7,6 +7,7 @@ package rum
 //       Read & Write to that services as per the descriptions.
 
 import (
+	rumstack "rum/app/stack"
 	"fmt"
 	"sync"
 	"time"
@@ -25,7 +26,7 @@ type Kit[In, Out any] struct {
 	// genkit          *IGenKit
 	activeService   map[string]*Service[In, Out]
 	inactiveService map[string]*Service[In, Out]
-	serviceStack    Stack[string]
+	serviceStack    rumstack.Stack[string]
 	Format          *TimeFormat
 	Metrics         IMetric `json:"metrics"`
 }

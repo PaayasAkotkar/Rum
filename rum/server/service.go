@@ -17,13 +17,13 @@ type Service[in, out any] struct {
 	Name     string
 }
 
-func NewService[in, out any](ctx context.Context, name string) *Service[in, out] {
+func NewService[in, out any](ctx context.Context, settings Settings, name string) *Service[in, out] {
 	b := NewBudget(0, 0)
 	return &Service[in, out]{
 		context:  ctx,
 		Format:   NewTimeFormat(),
 		Budget:   b,
-		dispatch: NewDispatcher[in, out](),
+		dispatch: NewDispatcher[in, out](settings),
 		Rank:     1,
 		Name:     name,
 	}

@@ -1,9 +1,11 @@
 package rum
 
 import (
-	rumrpc "rum/app/misc/rum"
 	"context"
 	"log"
+	rumchakra "rum/app/chakra"
+	rumrpc "rum/app/misc/rum"
+	rumpaint "rum/app/paint"
 	"strings"
 	"sync"
 )
@@ -13,8 +15,9 @@ import (
 type Rum[In, Out any] struct {
 	rumrpc.UnimplementedOnRumServiceServer
 
-	light *Light[In, IDispatchResult]
-	store *RumStore[In, Out]
+	// light *Light[In, IDispatchResult]
+	chakra *rumchakra.Chakra[IDispatchResult]
+	store  *RumStore[In, Out]
 
 	post              chan ILinks[In, Out]
 	deleteService     chan ILinks[In, Out]
@@ -31,10 +34,19 @@ type Rum[In, Out any] struct {
 }
 
 func New[In, Out any](ctx context.Context, store *RumStore[In, Out]) *Rum[In, Out] {
-
+	t := rumpaint.Header(`
+██████╗░██╗░░░██╗███╗░░░███╗
+██╔══██╗██║░░░██║████╗░████║
+██████╔╝██║░░░██║██╔████╔██║
+██╔══██╗██║░░░██║██║╚██╔╝██║
+██║░░██║╚██████╔╝██║░╚═╝░██║
+╚═╝░░╚═╝░╚═════╝░╚═╝░░░░░╚═╝
+	`)
+	log.Println(t)
 	return &Rum[In, Out]{
-		store:             store,
-		light:             NewLight[In, IDispatchResult](),
+		store: store,
+		// light:             NewLight[In, IDispatchResult](),
+		chakra:            rumchakra.New[IDispatchResult](),
 		post:              make(chan ILinks[In, Out]),
 		deleteService:     make(chan ILinks[In, Out]),
 		activateService:   make(chan ILinks[In, Out]),
@@ -46,21 +58,6 @@ func New[In, Out any](ctx context.Context, store *RumStore[In, Out]) *Rum[In, Ou
 	}
 }
 
-// Fetch returns the registered dispatches results
-// func (r *Rum[In, Out]) Fetch(profile ISequence[In], service, event string) *IDispatchResult {
-// 	a, err := r.Store.profile.GetProfile(profile)
-// 	if err != nil {
-// 		return nil
-// 	}
-// 	s, err := a.GetService(service)
-// 	if err != nil {
-// 		return nil
-// 	}
-// 	b := s.dispatch.GetResults(event)
-
-// 	return b
-// }
-
 // Paper monitors the profile and returns the result of the serivce of created event
 func (r *Rum[In, Out]) Paper(profile ISequence[In]) *IDispatchResult {
 	log.Println("in tick fetch")
@@ -70,10 +67,11 @@ func (r *Rum[In, Out]) Paper(profile ISequence[In]) *IDispatchResult {
 func (r *Rum[In, Out]) tickFetch(profile ISequence[In]) *IDispatchResult {
 	// Use only Name+Rank for pub/sub and profile lookup — Input is a pointer
 	// whose address won't match between subscriber and publisher.
-	key := ISequence[In]{Name: profile.Name, Rank: profile.Rank}
-	ch := r.light.Subscribe(key)
-	defer r.light.Unsub(key, ch)
 
+	// ch := r.light.Subscribe(key)
+	// defer r.light.Unsub(key, ch)
+	ch := r.chakra.Subscribe(profile.Name)
+	defer r.chakra.Kai(profile.Name, ch)
 	for {
 		select {
 		case <-r.ctx.Done():
@@ -86,19 +84,3 @@ func (r *Rum[In, Out]) tickFetch(profile ISequence[In]) *IDispatchResult {
 		}
 	}
 }
-
-// func (r *Rum[In, Out]) scanReady(profile ISequence[In]) *IDispatchResult {
-// 	kit, err := r.GetProfile(profile)
-// 	if err != nil {
-// 		return nil
-// 	}
-// 	for _, svc := range kit.Services() {
-// 		for n := range svc.GetDispatch().GetRegistry() {
-// 			z := svc.GetDispatch().GetResults(n)
-// 			if z != nil && z.IsReady {
-// 				return z
-// 			}
-// 		}
-// 	}
-// 	return nil
-// }

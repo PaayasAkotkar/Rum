@@ -1,5 +1,3 @@
-// Package main...
-// note: the currrent structs are kept so taht you can test with the models
 package main
 
 import (
@@ -84,7 +82,6 @@ const (
 	API   = ""
 )
 
-// playRum demonstrates the example of the rum
 func playRum() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -106,8 +103,8 @@ func playRum() {
 	profile := rum.NewProfile[Req, *Resp]()
 	kit := rum.NewKit[Req, *Resp](MODEL)
 	kit.SetBucket(bu)
-	service := rum.NewService[Req, *Resp](ctx, "gem-ser")
-	dispatch := rum.NewDispatcher[Req, *Resp]()
+	service := rum.NewService[Req, *Resp](ctx, rum.Settings{}, "gem-ser")
+	dispatch := rum.NewDispatcher[Req, *Resp](rum.Settings{})
 
 	var register rum.IRegister[Req, *Resp]
 	register.Fn = func(ctx context.Context, req Req) (*Resp, error) {
@@ -131,22 +128,18 @@ func playRum() {
 	}
 
 	dispatch.Register("coach-reply", register)
-
 	service.SetDispatch(dispatch)
-
 	kit.SetService(map[string]*rum.Service[Req, *Resp]{
 		"coach-service": service,
 	})
-
 	seq := rum.ISequence[Req]{Name: profName, Rank: 1}
-	profile.RegisterProfile(seq, kit)
+	profile.RegisterProfile(seq, 10*time.Second, kit)
 	store.SetProfile(profile)
 
 	rumx := rum.New(ctx, store)
 
 	var wg sync.WaitGroup
-	// note: it is not ideal and recommended to use this func like this
-	//       it is kept only for demonstration purpose.
+
 	wg.Add(3)
 	go func() {
 		defer wg.Done()
@@ -158,6 +151,7 @@ func playRum() {
 
 	go func() {
 		defer wg.Done()
+		time.Sleep(time.Second * 2)
 		res := rumx.Paper(seq)
 		if res.IsReady {
 			log.Println("metric: ", res.Metric.JSON())
@@ -167,7 +161,7 @@ func playRum() {
 
 	go func() {
 		defer wg.Done()
-		time.Sleep(time.Second * 2)
+		time.Sleep(time.Second * 3)
 		var req Req
 		id := "texs1121"
 		name := "testRozman"

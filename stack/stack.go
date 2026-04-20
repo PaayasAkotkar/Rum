@@ -1,6 +1,4 @@
-// Package rumstack
-// Simple Stack implementation
-package rumstack
+package stack
 
 import (
 	"slices"

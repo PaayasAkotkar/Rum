@@ -1,6 +1,6 @@
 ## RUM
 <div align="center">
-<img src="./image/logo.png" alt="RUM Logo" width="132" height="132">
+<img src="./image/rum.png" alt="RUM Logo" width="132" height="132">
 </div>
 
 ## Theme 🎨

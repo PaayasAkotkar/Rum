@@ -14,7 +14,7 @@ call can be managed via client.
 
 <div align="center"><b>Beginning....</b></div>
 
-Since the day one when I started researching about RAG and reading research papers from [alphaxiv](https://www.alphaxiv.org/) I noticed that each model has their own attribute than I thought of creating a life cycle to monitor these models and have control when to stop and when to activate. I wanted something that can be controllable since first request without using if else statement.
+Since the day one when I started researching about RAG and reading research papers from [alphaxiv](https://www.alphaxiv.org/) I noticed that each model has their own attribute than I thought of creating a life cycle to monitor these models and have control when to stop and when to activate. I wanted something that can be controllable since first request without building complex stuffs.
 <br>
 <div align="center"><b>Why Milvus as Search Engine?</b></div>
 

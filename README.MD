@@ -103,11 +103,10 @@ Server owns the result
 ## Insiders 😅
 | Feature | Status | Insight |
 |---|---|---|
-| Embedder | Upcoming | One single embedder for all models |
-| Cluster | Upcoming | One Cluster to scale the service |
+| Embedder | Upcoming | one single embedder for all models |
+| Cluster | Upcoming | one Cluster to scale the service |
 | Dependency Injection |Upcoming| can pass dependcy injection for all common funcs|
-
-|ServerRUM|Upcoming| Reduce complexity for server->client communication |
+|ServerRUM|Upcoming| reduce complexity for server->client communication |
 
 
 ## New 😎

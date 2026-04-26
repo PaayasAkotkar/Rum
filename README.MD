@@ -105,7 +105,7 @@ Server owns the result
 |---|---|---|
 | Embedder | Upcoming | one single embedder for all models |
 | Cluster | Upcoming | one Cluster to scale the service |
-| Dependency Injection |Upcoming| can pass dependcy injection for all common funcs|
+| Dependency Injection |Upcoming| can pass dependency injection for all common funcs|
 |ServerRUM|Upcoming| reduce complexity for server->client communication |
 
 

@@ -117,5 +117,5 @@ Server owns the result
 | Chakra | v1 | internal pub-sub system |
 |Paint | v1| css-alike style sheet for terminal |
 <div align="center">
-<footer>@copyright 2026; created with imagination and coded with passion ✏️</footer>
+<footer>Apache License 2026; created with imagination and coded with passion</footer>
 </div>

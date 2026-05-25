@@ -3,10 +3,13 @@
 </div>
 <br>
 
+---
+
 ## Theme 🎨
 Rum or run your models an architecture where a developer can push profiles that include kits that include the respective services to be run, not one, not two, but as many as they can and monitor those specific profiles by creating a tag mark. 
 Profile -> Kits -> Services ->[1…N]
 
+---
 
 ## Structure 📝
 
@@ -40,6 +43,8 @@ Note: keep [In & Out] same for each model so that you can push many profiles.
 
 <br>
 
+---
+
 ## Architecture 🏗️
 <div align="center">
 Client [grpc client anywhere]
@@ -69,6 +74,9 @@ Poll() or Paper() — returns IDispatchResult
 Server owns the result
 <br>
 </div>
+<br>
+
+---
 
 ## Key Design Decisions 💡
 
@@ -78,18 +86,39 @@ Server owns the result
 | gRPC boundary | client triggers from anywhere, language agnostic |
 | client owns metrics | engine runs, client decides what to save |
 
+---
+
 ## Insiders 😅
 | Feature | Status | Insight |
 |---|---|---|
 | Cluster | Upcoming | One Cluster to scale the service |
 |ServerRUM|Upcoming| Reduce complexity for server->client communication |
 
+---
 
 ## New 😎
 | Feature | Version | Desc |
 |---|---|---|
-| RUM | v2 | client struct to build easy|
+| RUM | v2 | client struct to build easy, poll to fetch the results without cancel|
 | Dog | v2 | now able to target cpu, gpu usage , client struct build easy   |
+---
+
+<br>
+
+---
+
+## 🤝 Let's Connect
+
+If you want to be the part of our group or contribute, share insights, or chat about the project, feel free to reach out!
+
+* 💬 **Discord:** Add me using `Paayas10`
+* 📧 **Email:** [paayasakotkar@gmail.com](mailto:paayasakotkar@gmail.com)
+
+---
+<br>
+
+
 <div align="center">
 <footer>Apache License 2026; created with imagination and coded with passion</footer>
 </div>
+

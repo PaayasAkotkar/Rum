@@ -76,6 +76,17 @@ Server owns the result
 </div>
 <br>
 
+--- 
+
+
+## Quick Start
+
+
+- use example pacakge to run any of the example in the main.go
+- run the compile.bat
+note: examples are written by the gen-ai 
+in-case of any error do report the issue.
+
 ---
 
 ## Key Design Decisions 💡
@@ -106,17 +117,16 @@ Server owns the result
 
 ---
 
+> [!TIP]
+> ### 🤝 Let's Collaborate!
+> We have big plans for expanding this ecosystem. If you want to join the core group, contribute features, or chat about backend insights, let’s connect:
+> 
+> * 💬 **Discord:** `Paayas10`
+> * 📧 **Email:** [paayasakotkar@gmail.com](mailto:paayasakotkar@gmail.com)
 
-## 🤝 Let's Connect
-
-If you want to be the part of our group or contribute, share insights, or chat about the project, feel free to reach out!
-
-* 💬 **Discord:** Add me using `Paayas10`
-* 📧 **Email:** [paayasakotkar@gmail.com](mailto:paayasakotkar@gmail.com)
-
----
 <br>
 
+--- 
 
 <div align="center">
 <footer>Apache License 2026; created with imagination and coded with passion</footer>

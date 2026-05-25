@@ -1,26 +1,17 @@
-## RUM
+<div align="center">
+<img src="./asset/rum.png" width=320 height=320>
+</div>
+<br>
 
 ## Theme 🎨
-Rum provides the robust way to manage many model bots at once.
-It allows one single server to handle the flow of stream that 
-can be managed via client.
+Rum or run your models an architecture where a developer can push profiles that include kits that include the respective services to be run, not one, not two, but as many as they can and monitor those specific profiles by creating a tag mark. 
+Profile -> Kits -> Services ->[1…N]
 
-## Motivation 🔥
 
-<div>
-
-<div align="center"><b>Beginning....</b></div>
-
-Since the day one when I started researching about RAG and reading research papers from [alphaxiv](https://www.alphaxiv.org/) I noticed that each model has their own attribute than I thought of creating a life cycle to monitor these models and have control when to stop and when to activate. I wanted something that can be controllable since first request without using if else statement.
-<br>
-<div align="center"><b>Why Milvus as Search Engine?</b></div>
-
-The next thing was to figure out the search engine to allow the user to freely use the search engine without operating anything else. After trying pg-vector, Milvus solved the problem cleanly and also came with MinIO (S3-compatible storage) which was a bonus.
-
-<br>
-<div align="center"><b>Structure</b></div>
+## Structure 📝
 
 The idea is kept simple — monitor the attributes and allow a robust hierarchy to manage the models or agents. To make things simple gRPC was introduced so that calls can be made from anywhere to support one single server. With this setup the headache of creating many servers to support different agents or models has been solved and you achieve a simple reusable handler for those models.
+
 
 The hierarchy is:
 Rum[In, Out]
@@ -42,7 +33,7 @@ Note: keep [In & Out] same for each model so that you can push many profiles.
 <br>
 3. Call the server via gRPC client from anywhere
 <br>
-4. Paper blocks until all registered funcs complete
+4. Paper or Poll blocks until all registered funcs complete
 <br>
 5. Result carries the full metric report — client decides what to do with it
 </p>
@@ -67,11 +58,11 @@ POST() → write() — runs all registered funcs
 <br>
 ↓
 <br>
-Light.Publish() — internal pubsub (nanoseconds)
+Publish() — internal pubsub (nanoseconds)
 <br>
 ↓
 <br>
-Papers() — returns IDispatchResult
+Poll() or Paper() — returns IDispatchResult
 <br>
 ↓
 <br>
@@ -83,16 +74,13 @@ Server owns the result
 
 | Decision | Reason |
 |---|---|
-| Generic [In, Out] | One family, many models, no type confusion |
-| gRPC boundary | Client triggers from anywhere, language agnostic |
-| Internal pubsub | No network hop, nanosecond latency |
-| Budget per service | Cost control built in from day one |
-| Client owns metrics | Engine runs, client decides what to save |
+| generic [In, Out] | one family, many models, no type confusion |
+| gRPC boundary | client triggers from anywhere, language agnostic |
+| client owns metrics | engine runs, client decides what to save |
 
 ## Insiders 😅
 | Feature | Status | Insight |
 |---|---|---|
-| Embedder | Upcoming | One single embedder for all models |
 | Cluster | Upcoming | One Cluster to scale the service |
 |ServerRUM|Upcoming| Reduce complexity for server->client communication |
 
@@ -100,10 +88,8 @@ Server owns the result
 ## New 😎
 | Feature | Version | Desc |
 |---|---|---|
-| RUM | v1 | can now monitor the func performance |
-| Dog | v1 | monitors the func performance  |
-| Chakra | v1 | internal pub-sub system |
-|Paint | v1| css-alike style sheet for terminal |
+| RUM | v2 | client struct to build easy|
+| Dog | v2 | now able to target cpu, gpu usage , client struct build easy   |
 <div align="center">
 <footer>Apache License 2026; created with imagination and coded with passion</footer>
 </div>

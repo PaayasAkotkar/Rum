@@ -69,11 +69,10 @@ func (rd *Dog[T]) monitorPolicy(policyName string) {
 
 // tickSinglePolicy checks timeout for a specific policy
 func (rd *Dog[T]) tickSinglePolicy(policyName string) {
-	// rd.mu.Lock()
-	// defer rd.mu.Unlock()
-
+	rd.mu.RLock()
 	progress, pExists := rd.progress[policyName]
 	policy, policyExists := rd.policy[policyName]
+	rd.mu.RUnlock()
 
 	if !pExists || !policyExists || !progress.IsRunning || progress.StartedAtNano == 0 {
 		return
@@ -85,12 +84,11 @@ func (rd *Dog[T]) tickSinglePolicy(policyName string) {
 
 	var percent uint64
 	if timeout > 0 {
-
 		percent = uint64((float64(duration) / float64(timeout)) * 100)
 	}
 
 	if duration >= timeout {
-		rd.processBark(IBark{
+		rd.Bark(IBark{
 			Reason:   "Timeout Exceeded",
 			Policy:   policyName,
 			Time:     time.Now(),
@@ -100,6 +98,40 @@ func (rd *Dog[T]) tickSinglePolicy(policyName string) {
 		rd.updateProgress(policyName, percent)
 	}
 }
+
+// // tickSinglePolicy checks timeout for a specific policy
+// func (rd *Dog[T]) tickSinglePolicy(policyName string) {
+// 	// rd.mu.Lock()
+// 	// defer rd.mu.Unlock()
+
+// 	progress, pExists := rd.progress[policyName]
+// 	policy, policyExists := rd.policy[policyName]
+
+// 	if !pExists || !policyExists || !progress.IsRunning || progress.StartedAtNano == 0 {
+// 		return
+// 	}
+
+// 	start := time.Unix(0, progress.StartedAtNano)
+// 	duration := time.Since(start)
+// 	timeout := policy.GetBase()
+
+// 	var percent uint64
+// 	if timeout > 0 {
+
+// 		percent = uint64((float64(duration) / float64(timeout)) * 100)
+// 	}
+
+// 	if duration >= timeout {
+// 		rd.processBark(IBark{
+// 			Reason:   "Timeout Exceeded",
+// 			Policy:   policyName,
+// 			Time:     time.Now(),
+// 			Duration: duration,
+// 		})
+// 	} else {
+// 		rd.updateProgress(policyName, percent)
+// 	}
+// }
 
 // processDone triggers the writes the report & triggers pakkun
 func (rd *Dog[T]) processDone(done IDone) {
@@ -133,7 +165,7 @@ func (rd *Dog[T]) processDone(done IDone) {
 		report.calcAvg()
 		report.updateMin(funcDuration)
 		report.updateMax(funcDuration)
-
+		report.Output = done.Output
 		timeout := policy.GetBase()
 		if funcDuration < timeout {
 			report.pCount()
@@ -148,7 +180,7 @@ func (rd *Dog[T]) processDone(done IDone) {
 		report.setStatus(rd.calculateStatus(report))
 		report.setEndTime(time.Now())
 		report.isReady = true
-		rd.chakra.KageBunshinNoJutsu(policyName, report)
+		rd.cheetah.Publish(policyName, report)
 
 	}
 
@@ -236,7 +268,7 @@ func (rd *Dog[T]) processBark(bark IBark) {
 		report.updateSRate()
 		report.setStatus(rd.calculateStatus(report))
 		report.isReady = true
-		rd.chakra.KageBunshinNoJutsu(bark.Policy, report)
+		rd.cheetah.Publish(bark.Policy, report)
 	}
 
 	fmt.Printf("[Bark] Policy '%s': ERROR - %s (duration: %v)\n",
@@ -244,17 +276,30 @@ func (rd *Dog[T]) processBark(bark IBark) {
 }
 
 // ensureReport inits the report
-func (rd *Dog[T]) ensureReport(policyName string, policy *Policy[T]) {
+// func (rd *Dog[T]) ensureReport(policyName string, policy *Policy[T]) {
 
+// 	if _, exists := rd.reports[policyName]; !exists {
+// 		x := &WatchdogReport{
+// 			PolicyName:     policyName,
+// 			StartTime:      time.Now(),
+// 			TimeLimit:      policy.GetBase(),
+// 			FailureReasons: make([]string, 0),
+// 			MinDuration:    time.Duration(int64(^uint64(0) >> 1)), // Max int64
+// 		}
+// 		rd.reports[policyName] = x
+// 	}
+
+// }
+
+// ensureReport initializes a report if needed
+func (rd *Dog[T]) ensureReport(policyName string, policy *Policy[T]) {
 	if _, exists := rd.reports[policyName]; !exists {
-		x := &WatchdogReport{
+		rd.reports[policyName] = &WatchdogReport{
 			PolicyName:     policyName,
 			StartTime:      time.Now(),
 			TimeLimit:      policy.GetBase(),
 			FailureReasons: make([]string, 0),
-			MinDuration:    time.Duration(int64(^uint64(0) >> 1)), // Max int64
+			MinDuration:    time.Duration(int64(^uint64(0) >> 1)),
 		}
-		rd.reports[policyName] = x
 	}
-
 }

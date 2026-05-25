@@ -1,16 +1,20 @@
 // Package main showcase the framework
-// note: make sure to pass the minIO id of access id and pass or access key in the compose.yml
 package main
 
 import (
+	example "rum/app/examples"
 	"sync"
 )
 
 var wg sync.WaitGroup
 
 func main() {
-	playRum()
-	// playDog()
-	// playHybridSearch()
-	// playSearch()
+	example.PlayBasicRumExample()
+	// example.PlayAdvancedRumExample()
+	// example.PlayTrain()
+	// example.PlayRum()
+	// example.PlayRumDI()
+	// example.PlayRumV2()
+	// example.PlayDog()
+	// example.PlayInjection()
 }

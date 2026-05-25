@@ -1,2 +1,15 @@
 go.sum
-./vault
+/vault
+/train
+/cache-manager
+/search-manager
+/rum/server/budget.go
+/rum/server/cluster.go
+/examples/search.go
+/examples/train.go
+main.exe
+app.exe
+play.bat
+test.bat
+benchmark.bat
+compose.yml

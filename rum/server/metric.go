@@ -3,6 +3,7 @@ package rum
 import (
 	"encoding/json"
 	"fmt"
+	"rum/app/common"
 	"sort"
 	"strings"
 	"time"
@@ -11,6 +12,55 @@ import (
 // ProfileMetric is the top-level metric container saved on the Kit
 type ProfileMetric struct {
 	Metric map[string]IMetric `json:"metric"` // profile name -> metric
+}
+
+// IMetric holds all recorded data for a single profile run
+type IMetric struct {
+	Profile      map[int]IMetricProfile      `json:"profile"`
+	RequestsMade int64                       `json:"requestsMade"`
+	Succeed      map[int]IMetricAgentSucceed `json:"succeed"`
+	Fail         map[int]IMetricAgentFail    `json:"fail"`
+	Misc         map[int]IMetricMisc         `json:"misc"`
+	// Buget        map[int]IMetricBudget       `json:"budget"`
+}
+
+func NewIMetric() IMetric {
+	return IMetric{
+		Profile: make(map[int]IMetricProfile),
+		Succeed: make(map[int]IMetricAgentSucceed),
+		Fail:    make(map[int]IMetricAgentFail),
+		Misc:    make(map[int]IMetricMisc),
+		// Buget:   make(map[int]IMetricBudget),
+	}
+}
+
+type IMetricProfile struct {
+	Name  string `json:"name"`
+	Model string `json:"model"`
+}
+
+type IMetricMisc struct {
+	RemoveAt     time.Time `json:"removeAt"`
+	DeactivateAt time.Time `json:"deactivateAt"`
+	ActivateAt   time.Time `json:"activateAt"`
+}
+
+type IMetricAgentSucceed struct {
+	TimeTaken     time.Duration `json:"timeTaken"`
+	ClientRequest string        `json:"clientRequest"`
+	AgentReply    string        `json:"agentReply"`
+	At            time.Time     `json:"at"`
+}
+
+type IMetricAgentFail struct {
+	At     time.Time `json:"at"`
+	Reason string    `json:"reason"`
+}
+
+type IMetricBudget struct {
+	Left    float64 `json:"left"`
+	Current float64 `json:"current"`
+	Set     float64 `json:"set"`
 }
 
 func NewProfileMetric() ProfileMetric {
@@ -62,7 +112,8 @@ func (r *ProfileMetric) Prompt() string {
 			sb.WriteString("Successes:\n")
 			for i := 1; i <= len(m.Succeed); i++ {
 				if succ, ok := m.Succeed[i]; ok {
-					sb.WriteString(fmt.Sprintf("  %d. at=%s duration=%s\n", i, succ.At.Format(time.RFC3339), succ.TimeTaken))
+					t := time.Now().Add(succ.TimeTaken)
+					sb.WriteString(fmt.Sprintf("  %d. at=%s duration=%s\n", i, common.GenerateServerTime(succ.At), common.FormatDateForClient(t)))
 					sb.WriteString(fmt.Sprintf("     client request: %s\n", succ.ClientRequest))
 					sb.WriteString(fmt.Sprintf("     agent reply: %s\n", succ.AgentReply))
 				}
@@ -73,32 +124,32 @@ func (r *ProfileMetric) Prompt() string {
 			sb.WriteString("Failures:\n")
 			for i := 1; i <= len(m.Fail); i++ {
 				if fail, ok := m.Fail[i]; ok {
-					sb.WriteString(fmt.Sprintf("  %d. at=%s reason=%s\n", i, fail.At.Format(time.RFC3339), fail.Reason))
+					sb.WriteString(fmt.Sprintf("  %d. at=%s reason=%s\n", i, common.GenerateServerTime(fail.At), fail.Reason))
 				}
 			}
 		}
 
-		if len(m.Buget) > 0 {
-			sb.WriteString("Budget Events:\n")
-			for i := 1; i <= len(m.Buget); i++ {
-				if bud, ok := m.Buget[i]; ok {
-					sb.WriteString(fmt.Sprintf("  %d. current=%.2f left=%.2f set=%.2f\n", i, bud.Current, bud.Left, bud.Set))
-				}
-			}
-		}
+		// if len(m.Buget) > 0 {
+		// 	sb.WriteString("Budget Events:\n")
+		// 	for i := 1; i <= len(m.Buget); i++ {
+		// 		if bud, ok := m.Buget[i]; ok {
+		// 			sb.WriteString(fmt.Sprintf("  %d. current=%.2f left=%.2f set=%.2f\n", i, bud.Current, bud.Left, bud.Set))
+		// 		}
+		// 	}
+		// }
 
 		if len(m.Misc) > 0 {
 			sb.WriteString("Misc Events:\n")
 			for i := 1; i <= len(m.Misc); i++ {
 				if misc, ok := m.Misc[i]; ok {
 					if !misc.RemoveAt.IsZero() {
-						sb.WriteString(fmt.Sprintf("  %d. removed at %s\n", i, misc.RemoveAt.Format(time.RFC3339)))
+						sb.WriteString(fmt.Sprintf("  %d. removed at %s\n", i, common.GenerateServerTime(misc.RemoveAt)))
 					}
 					if !misc.DeactivateAt.IsZero() {
-						sb.WriteString(fmt.Sprintf("  %d. deactivated at %s\n", i, misc.DeactivateAt.Format(time.RFC3339)))
+						sb.WriteString(fmt.Sprintf("  %d. deactivated at %s\n", i, common.FormatDateForClient(misc.DeactivateAt)))
 					}
 					if !misc.ActivateAt.IsZero() {
-						sb.WriteString(fmt.Sprintf("  %d. activated at %s\n", i, misc.ActivateAt.Format(time.RFC3339)))
+						sb.WriteString(fmt.Sprintf("  %d. activated at %s\n", i, common.GenerateServerTime(misc.ActivateAt)))
 					}
 				}
 			}
@@ -109,59 +160,12 @@ func (r *ProfileMetric) Prompt() string {
 	return sb.String()
 }
 
-// IMetric holds all recorded data for a single profile run
-type IMetric struct {
-	Profile      map[int]IMetricProfile      `json:"profile"`
-	RequestsMade int64                       `json:"requestsMade"`
-	Succeed      map[int]IMetricAgentSucceed `json:"succeed"`
-	Fail         map[int]IMetricAgentFail    `json:"fail"`
-	Misc         map[int]IMetricMisc         `json:"misc"`
-	Buget        map[int]IMetricBudget       `json:"budget"`
-}
-
-func NewIMetric() IMetric {
-	return IMetric{
-		Profile: make(map[int]IMetricProfile),
-		Succeed: make(map[int]IMetricAgentSucceed),
-		Fail:    make(map[int]IMetricAgentFail),
-		Misc:    make(map[int]IMetricMisc),
-		Buget:   make(map[int]IMetricBudget),
-	}
-}
-
-type IMetricProfile struct {
-	Name  string `json:"name"`
-	Model string `json:"model"`
-}
-
-type IMetricMisc struct {
-	RemoveAt     time.Time `json:"removeAt"`
-	DeactivateAt time.Time `json:"deactivateAt"`
-	ActivateAt   time.Time `json:"activateAt"`
-}
-
-type IMetricAgentSucceed struct {
-	TimeTaken     time.Duration `json:"timeTaken"`
-	ClientRequest string        `json:"clientRequest"`
-	AgentReply    string        `json:"agentReply"`
-	At            time.Time     `json:"at"`
-}
-
-type IMetricAgentFail struct {
-	At     time.Time `json:"at"`
-	Reason string    `json:"reason"`
-}
-
-type IMetricBudget struct {
-	Left    float64 `json:"left"`
-	Current float64 `json:"current"`
-	Set     float64 `json:"set"`
-}
-
 func (m *IMetric) PCount() int { return len(m.Profile) }
 func (m *IMetric) FCount() int { return len(m.Fail) }
 func (m *IMetric) SCount() int { return len(m.Succeed) }
-func (m *IMetric) BCount() int { return len(m.Buget) }
+
+// func (m *IMetric) BCount() int { return len(m.Buget) }
+
 func (m *IMetric) MCount() int { return len(m.Misc) }
 
 func (m *IMetric) AddProfile(profile IMetricProfile) {
@@ -172,9 +176,9 @@ func (m *IMetric) AddRequest() {
 	m.RequestsMade++
 }
 
-func (m *IMetric) AddBudget(b IMetricBudget) {
-	m.Buget[m.BCount()+1] = b
-}
+// func (m *IMetric) AddBudget(b IMetricBudget) {
+// 	m.Buget[m.BCount()+1] = b
+// }
 
 func (m *IMetric) AddSucceedReport(resp IMetricAgentSucceed) {
 	m.Succeed[m.SCount()+1] = resp

@@ -7,22 +7,22 @@ package rum
 //       Read & Write to that services as per the descriptions.
 
 import (
-	rumstack "rum/app/stack"
 	"fmt"
+	rumstack "rum/app/stack"
 	"sync"
 	"time"
 )
 
-const maxMetrics = 100
+// const maxMetrics = 100
 
 // Kit is the reusable container for a profile's model config, embedder,
 // active/inactive services, and accumulated metrics.
 type Kit[In, Out any] struct {
 	mu sync.RWMutex
 	// embd     *Embd
-	Model    string
-	Bucket   string
-	isHybrid bool
+	// Model    string
+	// Bucket   string
+	// isHybrid bool
 	// genkit          *IGenKit
 	activeService   map[string]*Service[In, Out]
 	inactiveService map[string]*Service[In, Out]
@@ -31,9 +31,9 @@ type Kit[In, Out any] struct {
 	Metrics         IMetric `json:"metrics"`
 }
 
-func NewKit[In, Out any](model string) *Kit[In, Out] {
+func NewKit[In, Out any]() *Kit[In, Out] {
 	return &Kit[In, Out]{
-		Model:           model,
+		// Model:           model,
 		Metrics:         NewIMetric(),
 		activeService:   make(map[string]*Service[In, Out]),
 		inactiveService: make(map[string]*Service[In, Out]),
@@ -42,9 +42,10 @@ func NewKit[In, Out any](model string) *Kit[In, Out] {
 
 // get funcs
 
-func (k *Kit[In, Out]) GetBucket() string      { return k.Bucket }
-func (k *Kit[In, Out]) IsHybrid() bool         { return k.isHybrid }
-func (k *Kit[In, Out]) GetModel() string       { return k.Model }
+// func (k *Kit[In, Out]) GetBucket() string      { return k.Bucket }
+// func (k *Kit[In, Out]) GetModel() string       { return k.Model }
+// func (k *Kit[In, Out]) IsHybrid() bool         { return k.isHybrid }
+
 func (k *Kit[In, Out]) GetFormat() *TimeFormat { return k.Format }
 func (k *Kit[In, Out]) GetMetrics() IMetric    { return k.Metrics }
 
@@ -68,10 +69,11 @@ func (k *Kit[In, Out]) GetService(key string) (*Service[In, Out], error) {
 
 // set funcs
 
-func (k *Kit[In, Out]) SetBucket(bucket string) { k.Bucket = bucket }
-func (k *Kit[In, Out]) SetMode(isHybrid bool)   { k.isHybrid = isHybrid }
+// func (k *Kit[In, Out]) SetBucket(bucket string) { k.Bucket = bucket }
+// func (k *Kit[In, Out]) SetModel(model string)   { k.Model = model }
+// func (k *Kit[In, Out]) SetMode(isHybrid bool)   { k.isHybrid = isHybrid }
+
 func (k *Kit[In, Out]) SetFormat(f *TimeFormat) { k.Format = f }
-func (k *Kit[In, Out]) SetModel(model string)   { k.Model = model }
 func (k *Kit[In, Out]) SetMetrics(m IMetric)    { k.Metrics = m }
 
 func (k *Kit[In, Out]) SetService(services map[string]*Service[In, Out]) {
@@ -174,11 +176,11 @@ func (k *Kit[In, Out]) AddActivateReport(t time.Time) {
 	k.Metrics.AddActivateReport(t)
 }
 
-func (k *Kit[In, Out]) AddBudgetReport(b IMetricBudget) {
-	k.mu.Lock()
-	defer k.mu.Unlock()
-	k.Metrics.AddBudget(b)
-}
+// func (k *Kit[In, Out]) AddBudgetReport(b IMetricBudget) {
+// 	k.mu.Lock()
+// 	defer k.mu.Unlock()
+// 	k.Metrics.AddBudget(b)
+// }
 
 func (k *Kit[In, Out]) AddProfileReport(p IMetricProfile) {
 	k.mu.Lock()

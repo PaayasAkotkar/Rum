@@ -1,18 +1,21 @@
-package dog
+package example
 
 import (
 	"fmt"
 	"log"
+	"rum/app/dog"
 	"time"
 )
 
+func PlayDog() {
+	ExampleClientBasic()
+}
+
 // ExampleClientBasic demonstrates the simplified client API
 func ExampleClientBasic() {
-	// 1. Create client
-	client := NewClient[struct{}](10 * time.Second)
+	client := dog.NewClient[struct{}](10 * time.Second)
 	defer client.Close()
 
-	// 2. Define a policy with fluent API
 	_, err := client.DefinePolicy("quickOp", 1*time.Second).
 		AddFunc("operation1", func() error {
 			time.Sleep(200 * time.Millisecond)
@@ -28,7 +31,6 @@ func ExampleClientBasic() {
 		log.Fatal(err)
 	}
 
-	// 3. Execute and get report - that's it!
 	if err := client.LazyExecuteAndReport("quickOp"); err != nil {
 		log.Fatal(err)
 	}
@@ -38,10 +40,9 @@ func ExampleClientBasic() {
 
 // ExampleClientMultiple demonstrates multiple policies
 func ExampleClientMultiple() {
-	client := NewClient[struct{}](10 * time.Second)
+	client := dog.NewClient[struct{}](10 * time.Second)
 	defer client.Close()
 
-	// Define policy 1
 	_, err := client.DefinePolicy("fastOps", 500*time.Millisecond).
 		AddFunc("fast1", func() error {
 			time.Sleep(100 * time.Millisecond)
@@ -56,7 +57,6 @@ func ExampleClientMultiple() {
 		log.Fatal(err)
 	}
 
-	// Define policy 2
 	_, err = client.DefinePolicy("slowOps", 1*time.Second).
 		AddFunc("slow1", func() error {
 			time.Sleep(400 * time.Millisecond)
@@ -71,16 +71,14 @@ func ExampleClientMultiple() {
 		log.Fatal(err)
 	}
 
-	// Execute both concurrently - one line!
 	reports, err := client.ExecuteMultiple("fastOps", "slowOps")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Print reports
 	for name, report := range reports {
 		log.Printf("\n%s Report:\n", name)
-		log.Println(&FormattedReport{Report: report})
+		log.Println(&dog.FormattedReport{Report: report})
 	}
 
 	log.Println("✅ All done!")
@@ -92,7 +90,7 @@ func ExampleClientWithData() {
 		Value string
 	}
 
-	client := NewClient[Result](10 * time.Second)
+	client := dog.NewClient[Result](10 * time.Second)
 	defer client.Close()
 
 	_, err := client.DefinePolicy("dataOp", 1*time.Second).
@@ -106,19 +104,18 @@ func ExampleClientWithData() {
 		log.Fatal(err)
 	}
 
-	// Execute and get report
 	report, err := client.ExecuteAndReport("dataOp")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Println(&FormattedReport{Report: report})
+	log.Println(&dog.FormattedReport{Report: report})
 	log.Printf("Output: %s\n", string(report.Output))
 }
 
 // ExampleClientRepeated demonstrates repeated execution with reset
 func ExampleClientRepeated() {
-	client := NewClient[struct{}](10 * time.Second)
+	client := dog.NewClient[struct{}](10 * time.Second)
 	defer client.Close()
 
 	_, err := client.DefinePolicy("repeated", 1*time.Second).
@@ -132,7 +129,6 @@ func ExampleClientRepeated() {
 		log.Fatal(err)
 	}
 
-	// Execute multiple times
 	for i := 1; i <= 3; i++ {
 		log.Printf("\n--- Run %d ---\n", i)
 
@@ -140,7 +136,6 @@ func ExampleClientRepeated() {
 			log.Fatal(err)
 		}
 
-		// Reset for next run
 		if i < 3 {
 			if err := client.Reset("repeated"); err != nil {
 				log.Fatal(err)
@@ -151,12 +146,11 @@ func ExampleClientRepeated() {
 
 // ExampleClientWithMetrics demonstrates accessing metrics
 func ExampleClientWithMetrics() {
-	client := NewClient[struct{}](10 * time.Second)
+	client := dog.NewClient[struct{}](10 * time.Second)
 	defer client.Close()
 
 	_, err := client.DefinePolicy("cpuIntensive", 2*time.Second).
 		AddFunc("heavyOp", func() error {
-			// CPU intensive work
 			sum := 0
 			for i := 0; i < 100000000; i++ {
 				sum += i
@@ -170,12 +164,10 @@ func ExampleClientWithMetrics() {
 		log.Fatal(err)
 	}
 
-	// Execute
 	if err := client.LazyExecuteAndReport("cpuIntensive"); err != nil {
 		log.Fatal(err)
 	}
 
-	// Get metrics
 	metrics := client.GetMetrics("cpuIntensive")
 	if metrics != nil {
 		log.Printf("\nMetrics Summary:\n")
@@ -190,10 +182,9 @@ func ExampleClientWithMetrics() {
 
 // ExampleClientListAndInfo demonstrates listing policies and getting info
 func ExampleClientListAndInfo() {
-	client := NewClient[struct{}](10 * time.Second)
+	client := dog.NewClient[struct{}](10 * time.Second)
 	defer client.Close()
 
-	// Define multiple policies
 	for i := 1; i <= 3; i++ {
 		name := fmt.Sprintf("policy%d", i)
 		_, err := client.DefinePolicy(name, 1*time.Second).
@@ -207,11 +198,9 @@ func ExampleClientListAndInfo() {
 		}
 	}
 
-	// List all policies
 	policies := client.ListPolicies()
 	log.Printf("Registered policies: %v\n", policies)
 
-	// Get info on each
 	for _, policyName := range policies {
 		progress := client.GetProgress(policyName)
 		metrics := client.GetMetrics(policyName)

@@ -11,18 +11,18 @@ import (
 type Service[in, out any] struct {
 	context  context.Context
 	Format   *TimeFormat
-	Budget   *Budget
 	dispatch *Dispatcher[in, out]
 	Rank     int
 	Name     string
+	// Budget   *Budget
 }
 
 func NewService[in, out any](ctx context.Context, settings Settings, name string) *Service[in, out] {
-	b := NewBudget(0, 0)
+	// b := NewBudget(0, 0)
 	return &Service[in, out]{
-		context:  ctx,
-		Format:   NewTimeFormat(),
-		Budget:   b,
+		context: ctx,
+		Format:  NewTimeFormat(),
+		// Budget:   b,
 		dispatch: NewDispatcher[in, out](settings),
 		Rank:     1,
 		Name:     name,
@@ -45,9 +45,11 @@ func (d *Service[in, out]) GetDispatch() *Dispatcher[in, out] {
 func (d *Service[in, out]) GetName() string {
 	return d.Name
 }
-func (d *Service[in, out]) GetBudget() *Budget {
-	return d.Budget
-}
+
+//	func (d *Service[in, out]) GetBudget() *Budget {
+//		return d.Budget
+//	}
+
 func (d *Service[in, out]) GetFormat() *TimeFormat {
 	return d.Format
 }
@@ -62,9 +64,11 @@ func (d *Service[in, out]) GetRank() int {
 func (d *Service[in, out]) SetFormat(t *TimeFormat) {
 	d.Format = t
 }
-func (d *Service[in, out]) SetBudget(b *Budget) {
-	d.Budget = b
-}
+
+//	func (d *Service[in, out]) SetBudget(b *Budget) {
+//		d.Budget = b
+//	}
+
 func (d *Service[in, out]) SetRank(Rank int) {
 	d.Rank = Rank
 }

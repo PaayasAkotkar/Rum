@@ -31,61 +31,60 @@ func (r *Rum[In, Out]) handleDispatch(seq ISequence[In], kit *Kit[In, Out]) {
 		}()
 		return
 	}
-
 	r.write(seq, svc)
 }
 
-func (r *Rum[In, Out]) handleServiceFormat(profile ISequence[In], svc *Service[In, Out]) {
-	f := svc.GetFormat()
-	if f == nil {
-		return
-	}
+// func (r *Rum[In, Out]) handleServiceFormat(profile ISequence[In], svc *Service[In, Out]) {
+// 	f := svc.GetFormat()
+// 	if f == nil {
+// 		return
+// 	}
 
-	x := ISequence[In]{Name: profile.Name, Rank: profile.Rank, Service: svc.GetName()}
+// 	x := ISequence[In]{Name: profile.Name, Rank: profile.Rank, Service: svc.GetName()}
 
-	if f.ShouldRemove() {
-		r.onRemoveService(x.Name, x.Service)
-	} else if f.ShouldDeactivate() {
-		r.onDeactivateService(x.Name, x.Service)
-		if sleep := f.GetActivateTime(); sleep != nil {
-			r.wg.Add(1)
-			go func() {
-				defer r.wg.Done()
-				defer func() {
-					if r := recover(); r != nil {
-						log.Printf("PANIC RECOVERED in handleServiceFormat goroutine: %v\n%s", r, debug.Stack())
-					}
-				}()
-				time.Sleep(*sleep)
-				r.onActivateProfile(x.Name)
-			}()
-		}
-	}
-}
+// 	if f.ShouldRemove() {
+// 		r.onRemoveService(x.Name, x.Service)
+// 	} else if f.ShouldDeactivate() {
+// 		r.onDeactivateService(x.Name, x.Service)
+// 		if sleep := f.GetActivateTime(); sleep != nil {
+// 			r.wg.Add(1)
+// 			go func() {
+// 				defer r.wg.Done()
+// 				defer func() {
+// 					if r := recover(); r != nil {
+// 						log.Printf("PANIC RECOVERED in handleServiceFormat goroutine: %v\n%s", r, debug.Stack())
+// 					}
+// 				}()
+// 				time.Sleep(*sleep)
+// 				r.onActivateProfile(x.Name)
+// 			}()
+// 		}
+// 	}
+// }
 
-func (r *Rum[In, Out]) handleProfileFormat(profile ISequence[In], kit *Kit[In, Out]) {
-	f := kit.GetFormat()
-	if f == nil {
-		return
-	}
-	x := ISequence[In]{Name: profile.Name, Rank: profile.Rank}
+// func (r *Rum[In, Out]) handleProfileFormat(profile ISequence[In], kit *Kit[In, Out]) {
+// 	f := kit.GetFormat()
+// 	if f == nil {
+// 		return
+// 	}
+// 	x := ISequence[In]{Name: profile.Name, Rank: profile.Rank}
 
-	if f.ShouldRemove() {
-		r.onRemoveProfile(x.Name)
-	} else if f.ShouldDeactivate() {
-		r.onDeactivateProfile(x.Name)
-		if sleep := f.GetActivateTime(); sleep != nil {
-			r.wg.Add(1)
-			go func() {
-				defer r.wg.Done()
-				defer func() {
-					if r := recover(); r != nil {
-						log.Printf("PANIC RECOVERED in handleProfileFormat goroutine: %v\n%s", r, debug.Stack())
-					}
-				}()
-				time.Sleep(*sleep)
-				r.activateProfile <- ILinks[In, Out]{Links: []ILink[In, Out]{{Seq: x}}, Clean: true}
-			}()
-		}
-	}
-}
+// 	if f.ShouldRemove() {
+// 		r.onRemoveProfile(x.Name)
+// 	} else if f.ShouldDeactivate() {
+// 		r.onDeactivateProfile(x.Name)
+// 		if sleep := f.GetActivateTime(); sleep != nil {
+// 			r.wg.Add(1)
+// 			go func() {
+// 				defer r.wg.Done()
+// 				defer func() {
+// 					if r := recover(); r != nil {
+// 						log.Printf("PANIC RECOVERED in handleProfileFormat goroutine: %v\n%s", r, debug.Stack())
+// 					}
+// 				}()
+// 				time.Sleep(*sleep)
+// 				r.activateProfile <- ILinks[In, Out]{Links: []ILink[In, Out]{{Seq: x}}, Clean: true}
+// 			}()
+// 		}
+// 	}
+// }

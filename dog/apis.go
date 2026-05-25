@@ -1,8 +1,193 @@
-// Package dog ...
-// The things with the apis is that
-// it is created based on respecting the time
-// each api has to executed under some circumstances
-// new: returns the error if any
+// // Package dog ...
+// // The things with the apis is that
+// // it is created based on respecting the time
+// // each api has to executed under some circumstances
+// // new: returns the error if any
+// package dog
+
+// import (
+// 	"fmt"
+// 	"log"
+// 	"time"
+// )
+
+// func (rd *Dog[T]) Watch() {
+// 	rd.wg.Add(1)
+
+// 	go rd.watchDog()
+// }
+
+// // Register pushes the profile in heap
+// func (rd *Dog[T]) Register(policy *Policy[T]) error {
+// 	t := rd.Settings.RegisterationTimeout
+// 	if t == 0 {
+// 		t = 2 * time.Second
+// 	}
+// 	select {
+// 	case rd.register <- policy:
+// 		return nil
+// 	case <-time.After(t):
+// 		return fmt.Errorf("timeout registering policy %s", policy.Name)
+// 	case <-rd.ctx.Done():
+// 		return fmt.Errorf("rumdog context cancelled")
+// 	}
+// }
+
+// // ParkDog signals to monitor the policyName for all the funcs
+// func (rd *Dog[T]) ParkDog(policyName string) error {
+// 	t := rd.Settings.ParkdogTimeout
+// 	if t == 0 {
+// 		t = 1 * time.Second
+// 	}
+// 	select {
+// 	case rd.parkDog <- policyName:
+// 		return nil
+// 	case <-time.After(t):
+// 		return fmt.Errorf("timeout parking dog on policy %s", policyName)
+// 	case <-rd.ctx.Done():
+// 		return fmt.Errorf("rumdog context cancelled")
+// 	}
+// }
+
+// // Done successfully performed the func
+// func (rd *Dog[T]) Done(done IDone) error {
+// 	t := rd.Settings.ProcessDoneTimeout
+// 	if t == 0 {
+// 		t = 1 * time.Second
+// 	}
+// 	select {
+// 	case rd.done <- done:
+// 		return nil
+// 	case <-time.After(t):
+// 		return fmt.Errorf("timeout signaling done for policy %s", done.PolicyName)
+// 	case <-rd.ctx.Done():
+// 		return fmt.Errorf("rumdog context cancelled")
+// 	}
+// }
+
+// // Bark signals an error during func
+// func (rd *Dog[T]) Bark(bark IBark) error {
+// 	t := rd.Settings.BarkTimeout
+// 	if t == 0 {
+// 		t = 1 * time.Second
+// 	}
+// 	bark.Time = time.Now()
+// 	select {
+// 	case rd.bark <- bark:
+// 		return nil
+// 	case <-time.After(t):
+// 		return fmt.Errorf("timeout barking for policy %s", bark.Policy)
+// 	case <-rd.ctx.Done():
+// 		return fmt.Errorf("rumdog context cancelled")
+// 	}
+// }
+
+// // Reset reset the policy call
+// func (rd *Dog[T]) Reset(policyName string) error {
+// 	t := rd.Settings.ResetCallsTimeout
+// 	if t == 0 {
+// 		t = 1 * time.Second
+// 	}
+// 	select {
+// 	case rd.reset <- policyName:
+// 		return nil
+// 	case <-time.After(t):
+// 		return fmt.Errorf("timeout resetting policy %s", policyName)
+// 	case <-rd.ctx.Done():
+// 		return fmt.Errorf("rumdog context cancelled")
+// 	}
+// }
+
+// // ResetAll resets all the pollicies calls to zero
+// func (rd *Dog[T]) ResetAll() error {
+// 	t := rd.Settings.ResetAllCallsTimeout
+// 	if t == 0 {
+// 		t = 1 * time.Second
+// 	}
+// 	select {
+// 	case rd.resetAll <- true:
+// 		return nil
+// 	case <-time.After(t):
+// 		return fmt.Errorf("timeout resetting all policies")
+// 	case <-rd.ctx.Done():
+// 		return fmt.Errorf("rumdog context cancelled")
+// 	}
+// }
+
+// // Shutdown graceful shutdown
+// func (rd *Dog[T]) Shutdown() error {
+// 	if rd.cancel != nil {
+// 		rd.cancel()
+// 	}
+
+// 	rd.once.Do(func() {
+// 		close(rd.stopCh)
+// 	})
+
+// 	t := rd.Settings.ShutdownTimeout
+// 	if t == 0 {
+// 		t = 5 * time.Second
+// 	}
+
+// 	go func() {
+// 		rd.wg.Wait()
+// 		close(rd.done)
+// 	}()
+
+// 	select {
+// 	case <-rd.done:
+// 		log.Println("Shutdown complete")
+// 		for r := range rd.monitors {
+// 			delete(rd.monitors, r)
+// 		}
+// 		return nil
+// 	case <-time.After(t):
+// 		return fmt.Errorf("graceful shutdown timed out after %v", t)
+// 	}
+// }
+
+// SetSettings custom setting
+// func (rd *Dog[T]) SetSettings(settings *Settings) {
+// 	rd.mu.Lock()
+// 	defer rd.mu.Unlock()
+// 	rd.Settings = settings
+// }
+
+// // Pakkun returns the full report for a policy
+// // inspiration of the name from Naruto -> Kakashi's summing dog
+// func (rd *Dog[T]) Pakkun(name string) *WatchdogReport {
+
+// 	ch := rd.chakra.Subscribe(name)
+// 	defer rd.chakra.Kai(name, ch)
+
+// 	for {
+// 		select {
+// 		case <-rd.ctx.Done():
+// 			return nil
+// 		case result := <-ch:
+// 			if rd.Settings.ShowReport {
+// 				rd.generateReport(name)
+// 			}
+// 			return result
+// 		}
+// 	}
+// }
+
+// func (rd *Dog[T]) Summon(policyName string) error {
+// 	t := rd.Settings.ResetCallsTimeout
+// 	if t == 0 {
+// 		t = 1 * time.Second
+// 	}
+// 	select {
+// 	case rd.summonCh <- policyName:
+// 		return nil
+// 	case <-time.After(t):
+// 		return fmt.Errorf("timeout resetting policy %s", policyName)
+// 	case <-rd.ctx.Done():
+// 		return fmt.Errorf("rumdog context cancelled")
+// 	}
+// }
+
 package dog
 
 import (
@@ -11,19 +196,34 @@ import (
 	"time"
 )
 
-// Register pushes the profile in heap
+// Watch starts the main watchdog loop
+func (rd *Dog[T]) Watch() {
+	rd.wg.Add(1)
+	go rd.watchDog()
+}
+
+// Register pushes a policy to the watchdog
 func (rd *Dog[T]) Register(policy *Policy[T]) error {
 	t := rd.Settings.RegisterationTimeout
 	if t == 0 {
 		t = 2 * time.Second
 	}
+
 	select {
 	case rd.register <- policy:
-		return nil
+		// Wait for registration confirmation
+		select {
+		case <-rd.registeredCh:
+			return nil
+		case <-time.After(t):
+			return fmt.Errorf("timeout confirming registration for policy %s", policy.Name)
+		case <-rd.ctx.Done():
+			return fmt.Errorf("dog context cancelled")
+		}
 	case <-time.After(t):
 		return fmt.Errorf("timeout registering policy %s", policy.Name)
 	case <-rd.ctx.Done():
-		return fmt.Errorf("rumdog context cancelled")
+		return fmt.Errorf("dog context cancelled")
 	}
 }
 
@@ -43,23 +243,44 @@ func (rd *Dog[T]) Unregister(name string) error {
 	}
 }
 
-// ParkDog signals to monitor the policyName for all the funcs
+// ParkDog starts monitoring a policy (only works if registered)
 func (rd *Dog[T]) ParkDog(policyName string) error {
 	t := rd.Settings.ParkdogTimeout
 	if t == 0 {
 		t = 1 * time.Second
 	}
+
+	// Check if policy is registered
+	rd.mu.RLock()
+	lifecycle, exists := rd.lifecycle[policyName]
+	rd.mu.RUnlock()
+
+	if !exists {
+		return fmt.Errorf("cannot park dog: policy %s not registered", policyName)
+	}
+
+	// Wait for registration to complete
+	// if this is not done  the other process is not started
+	// that is the design so this is necessary
+	maxWait := time.Now().Add(t)
+	for !lifecycle.IsInState(StateRegistered) {
+		if time.Now().After(maxWait) {
+			return fmt.Errorf("timeout: policy %s still registering after %v", policyName, t)
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+
 	select {
 	case rd.parkDog <- policyName:
 		return nil
 	case <-time.After(t):
 		return fmt.Errorf("timeout parking dog on policy %s", policyName)
 	case <-rd.ctx.Done():
-		return fmt.Errorf("rumdog context cancelled")
+		return fmt.Errorf("dog context cancelled")
 	}
 }
 
-// Done successfully performed the func
+// Done signals function completion
 func (rd *Dog[T]) Done(done IDone) error {
 	t := rd.Settings.ProcessDoneTimeout
 	if t == 0 {
@@ -71,11 +292,11 @@ func (rd *Dog[T]) Done(done IDone) error {
 	case <-time.After(t):
 		return fmt.Errorf("timeout signaling done for policy %s", done.PolicyName)
 	case <-rd.ctx.Done():
-		return fmt.Errorf("rumdog context cancelled")
+		return fmt.Errorf("dog context cancelled")
 	}
 }
 
-// Bark signals an error during func
+// Bark signals an error
 func (rd *Dog[T]) Bark(bark IBark) error {
 	t := rd.Settings.BarkTimeout
 	if t == 0 {
@@ -88,11 +309,41 @@ func (rd *Dog[T]) Bark(bark IBark) error {
 	case <-time.After(t):
 		return fmt.Errorf("timeout barking for policy %s", bark.Policy)
 	case <-rd.ctx.Done():
-		return fmt.Errorf("rumdog context cancelled")
+		return fmt.Errorf("dog context cancelled")
 	}
 }
 
-// Reset reset the policy call
+// Summon executes all functions in a policy
+func (rd *Dog[T]) Summon(policyName string) error {
+	t := rd.Settings.ResetCallsTimeout
+	if t == 0 {
+		t = 1 * time.Second
+	}
+
+	// Verify policy exists and is registered
+	rd.mu.RLock()
+	lifecycle, exists := rd.lifecycle[policyName]
+	rd.mu.RUnlock()
+
+	if !exists {
+		return fmt.Errorf("cannot summon: policy %s not registered", policyName)
+	}
+
+	if !lifecycle.IsInState(StateMonitoring) {
+		return fmt.Errorf("cannot summon: policy %s not in monitoring state (current: %s)", policyName, lifecycle.GetState())
+	}
+
+	select {
+	case rd.summonCh <- policyName:
+		return nil
+	case <-time.After(t):
+		return fmt.Errorf("timeout summoning policy %s", policyName)
+	case <-rd.ctx.Done():
+		return fmt.Errorf("dog context cancelled")
+	}
+}
+
+// Reset resets policy stats
 func (rd *Dog[T]) Reset(policyName string) error {
 	t := rd.Settings.ResetCallsTimeout
 	if t == 0 {
@@ -104,11 +355,11 @@ func (rd *Dog[T]) Reset(policyName string) error {
 	case <-time.After(t):
 		return fmt.Errorf("timeout resetting policy %s", policyName)
 	case <-rd.ctx.Done():
-		return fmt.Errorf("rumdog context cancelled")
+		return fmt.Errorf("dog context cancelled")
 	}
 }
 
-// ResetAll resets all the pollicies calls to zero
+// ResetAll resets all policies
 func (rd *Dog[T]) ResetAll() error {
 	t := rd.Settings.ResetAllCallsTimeout
 	if t == 0 {
@@ -120,11 +371,11 @@ func (rd *Dog[T]) ResetAll() error {
 	case <-time.After(t):
 		return fmt.Errorf("timeout resetting all policies")
 	case <-rd.ctx.Done():
-		return fmt.Errorf("rumdog context cancelled")
+		return fmt.Errorf("dog context cancelled")
 	}
 }
 
-// Shutdown graceful shutdown
+// Shutdown gracefully shuts down the watchdog
 func (rd *Dog[T]) Shutdown() error {
 	if rd.cancel != nil {
 		rd.cancel()
@@ -141,22 +392,45 @@ func (rd *Dog[T]) Shutdown() error {
 
 	go func() {
 		rd.wg.Wait()
-		close(rd.done)
+		close(rd.doneCh)
 	}()
 
 	select {
-	case <-rd.done:
-		log.Println("Shutdown complete")
-		for r := range rd.monitors {
-			delete(rd.monitors, r)
+	case <-rd.doneCh:
+		log.Println("✅ Shutdown complete")
+		rd.mu.Lock()
+		for name := range rd.monitors {
+			if monitor, exists := rd.monitors[name]; exists {
+				monitor.Stop()
+			}
+			delete(rd.monitors, name)
 		}
+		rd.mu.Unlock()
 		return nil
 	case <-time.After(t):
 		return fmt.Errorf("graceful shutdown timed out after %v", t)
 	}
 }
 
-// SetSettings custom setting
+// Pakkun returns the complete report for a policy
+func (rd *Dog[T]) Pakkun(name string) *WatchdogReport {
+	ch := rd.cheetah.Subscribe(name)
+	defer rd.cheetah.Unsubscribe(name, ch)
+
+	for {
+		select {
+		case <-rd.ctx.Done():
+			return nil
+		case result := <-ch:
+			if rd.Settings.ShowReport {
+				rd.generateReport(name)
+			}
+			return result
+		}
+	}
+}
+
+// SetSettings updates watchdog settings
 func (rd *Dog[T]) SetSettings(settings *Settings) {
 	rd.mu.Lock()
 	defer rd.mu.Unlock()

@@ -39,15 +39,15 @@ func (r *Rum[In, Out]) write(profile ISequence[In], desc *Service[In, Out]) *IWr
 		defer r.wg.Done()
 
 		for _, ser := range kits {
-			if b := ser.GetBudget(); b != nil && b.Exhausted() {
-				log.Println("budget error")
-				r.onDeactivateService(profile.Name, ser.Name)
-				break
-			}
+			// if b := ser.GetBudget(); b != nil && b.Exhausted() {
+			// 	log.Println("budget error")
+			// 	r.onDeactivateService(profile.Name, ser.Name)
+			// 	break
+			// }
 
-			if b := ser.GetBudget(); b != nil {
-				b.Spend()
-			}
+			// if b := ser.GetBudget(); b != nil {
+			// 	b.Spend()
+			// }
 
 			// Dispatch funcs
 			for n := range ser.GetDispatch().GetRegistry() {
@@ -55,31 +55,37 @@ func (r *Rum[In, Out]) write(profile ISequence[In], desc *Service[In, Out]) *IWr
 				if f := ser.GetFormat(); f != nil {
 					policy = f.Retry
 				}
+
 				mx := profile.Input
+
 				if mx == nil {
 					continue
 				}
 
 				if err := ser.GetDispatch().call(ctx, n, *mx, policy); err == nil {
-					rp := ser.GetDispatch().GetMetric(n)
+					metrics := ser.GetDispatch().GetMetrics(n)
 					if kit, err := r.store.GetKit(profile.Name); err == nil {
-						if rp.Fail != nil {
-							kit.AddFailReport(*rp.Fail)
-						} else if rp.Succeed != nil {
-							kit.AddSucceedReport(*rp.Succeed)
+						for _, rp := range metrics {
+							if rp.Fail != nil {
+								kit.AddFailReport(*rp.Fail)
+							} else if rp.Succeed != nil {
+								kit.AddSucceedReport(*rp.Succeed)
+							}
 						}
 					}
 				}
 
 			}
 
-			r.handleServiceFormat(profile, ser)
+			// r.handleServiceFormat(profile, ser)
 		}
 	}()
+
 	r.wg.Wait()
-	if kit, err := r.store.GetKit(profile.Name); err == nil {
-		r.handleProfileFormat(profile, kit)
-	}
+
+	// if kit, err := r.store.GetKit(profile.Name); err == nil {
+	// 	r.handleProfileFormat(profile, kit)
+	// }
 
 	if kit, err := r.store.GetKit(profile.Name); err == nil {
 		finalMetric.Metric[profile.Name] = kit.GetMetrics()
@@ -99,7 +105,7 @@ func (r *Rum[In, Out]) write(profile ISequence[In], desc *Service[In, Out]) *IWr
 		}
 	}
 
-	r.chakra.KageBunshinNoJutsu(profile.Name, finalResult)
+	r.cheetah.Publish(profile.Name, finalResult)
 
 	return &IWrite[In, Out]{
 		Report:  &finalMetric,

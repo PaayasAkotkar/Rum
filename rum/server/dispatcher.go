@@ -9,14 +9,16 @@
 package rum
 
 import (
-	rumdog "rum/app/dog"
-	rumstack "rum/app/stack"
 	"context"
 	"encoding/json"
 	"fmt"
 	"log"
+	rumdog "rum/app/dog"
+	rumstack "rum/app/stack"
 	"sync"
 	"time"
+
+	"github.com/avast/retry-go/v5"
 )
 
 // Dispatcher controls registered agent functions and their results
@@ -84,6 +86,10 @@ func (d *Dispatcher[in, out]) GetMetric(name string) IAgentResp {
 	return d.metric[name][d.metricCount(name)]
 }
 
+func (d *Dispatcher[in, out]) GetMetrics(name string) map[int]IAgentResp {
+	return d.metric[name]
+}
+
 func (d *Dispatcher[in, out]) metricCount(name string) int {
 	return len(d.metric[name])
 }
@@ -142,95 +148,73 @@ func (d *Dispatcher[in, out]) call(ctx context.Context, name string, input in, p
 		ts = 100 * time.Millisecond
 	}
 
-	dog := rumdog.New[out](t)
-	dog.Watch()
-	defer dog.Shutdown()
+	// dog := rumdog.New[out](t)
+	// dog.Watch()
+	// defer dog.Shutdown()
 
-	p := rumdog.NewPolicy[out](d.Settings.Base)
+	p := rumdog.NewPolicy[out](t)
 	p.Name = name
+	a := func() (*out, error) {
+		time.Sleep(ts)
+		resp, err := fn.Fn(ctx, input)
+		return &resp, err
+	}
 	p.AddFunc(rumdog.Funcs[out]{
 		Name: name,
-		Fn: func() (*out, error) {
-			time.Sleep(ts)
-			resp, err := fn.Fn(ctx, input)
-			return &resp, err
-		},
+		Fn:   &a,
 	})
 
-	if err := dog.Register(p); err != nil {
-		return err
-	}
-	if err := dog.ParkDog(name); err != nil {
-		return err
-	}
+	attempt := 0
+	ret := retry.New(retry.Attempts(uint(max)), retry.Delay(interval))
 
-	for attempt := range max {
-		if attempt > 0 {
-			select {
-			case <-ctx.Done():
-				return fmt.Errorf("max retry exceed")
-			case <-time.After(interval):
-			}
+	err := ret.Do(func() error {
+		attempt++
+
+		if ctx.Err() != nil {
+			return retry.Unrecoverable(ctx.Err())
 		}
 
-		start := time.Now()
-		res, err := p.Fn[0].Fn()
-		elapsed := time.Since(start)
+		cli := rumdog.NewClient[out](t)
+		defer cli.Close()
 
-		if err != nil {
-			dog.Bark(rumdog.IBark{
-				Policy: name,
-				Reason: err.Error(),
+		cli.DefinePolicy(name, ts).AddFuncWithReturn(name, a).Build()
+
+		rep, err := cli.ExecuteAndReport(p.Name)
+
+		if err == nil {
+			inData, err := json.Marshal(input)
+			if err != nil {
+				return retry.Unrecoverable(err)
+			}
+			d.writeMetric(name, IAgentResp{
+				Succeed: &IMetricAgentSucceed{
+					TimeTaken:     rep.TotalDuration,
+					AgentReply:    string(rep.Output),
+					ClientRequest: string(inData),
+				},
 			})
+			r := NewDispatchResult()
+			r.IsReady = true
+			r.Result = rep.Output
+			d.handleOutput(name, r)
+			d.handleComplete(name, true)
+			d.handleInput(name, input)
+			cli.Unregister(p.Name)
+			return nil
 		} else {
-			dog.Done(rumdog.IDone{
-				PolicyName:   name,
-				FuncName:     name,
-				Rank:         1,
-				FuncDuration: elapsed,
-			})
-		}
+			cli.Unregister(p.Name)
 
-		d.wg.Add(1)
-		go func() {
-			defer d.wg.Done()
-			report := dog.Pakkun(name)
-			if report != nil && report.IsReady() {
-				log.Println("report: ", report)
-
-				if err == nil {
-					// success — write metric and result, return
-					b, _ := json.Marshal(res)
-					c, _ := json.Marshal(input)
-					d.writeMetric(name, IAgentResp{Succeed: &IMetricAgentSucceed{
-						TimeTaken:     elapsed,
-						AgentReply:    string(b),
-						ClientRequest: string(c),
-						At:            time.Now(),
-					}})
-					r := NewDispatchResult()
-					r.IsReady = true
-					r.Result = b
-
-					d.handleOutput(name, r)
-					d.handleComplete(name, true)
-					d.handleInput(name, input)
-					return
-				}
-				// record each failure attempt
-				d.writeMetric(name, IAgentResp{Fail: &IMetricAgentFail{
+			d.writeMetric(name, IAgentResp{
+				Fail: &IMetricAgentFail{
+					Reason: fmt.Sprintf("attempt %d: %s", attempt, err.Error()),
 					At:     time.Now(),
-					Reason: fmt.Sprintf("attempt %d: %s", attempt+1, err.Error()),
-				}})
+				},
+			})
+			return err
+		}
+	})
 
-				// lastErr = err
-			}
-		}()
-		time.Sleep(ts)
-		d.wg.Wait()
-	}
-
-	return nil
+	return err
 }
 
 func (d *Dispatcher[in, out]) writeMetric(name string, resp IAgentResp) {

@@ -71,4 +71,11 @@ package dog
 // for each process-done the pubsub is activated
 // and the report is send to Pakkun
 // ------------------------------------------------
+// ------------------------------------------------
+// new ---
+//     no need to write complex stuff to monitor the function
+//     simple clinet implementation will do it
+//     like you can see in the exampleNew
+// ------------------------------------------------
+// ------------------------------------------------
 // -x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-x-

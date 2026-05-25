@@ -1,27 +1,26 @@
-package chakra
+package cheetah
 
 import (
-	"log"
 	"sync"
 )
 
-// Chakra is a generic pub/sub system keyed by string.
+// Cheetah  is a generic pub/sub system keyed by string.
 // T is the message payload type.
-type Chakra[T any] struct {
+type Cheetah[T any] struct {
 	mu          sync.Mutex
 	subscribers map[string]map[chan *T]struct{}
 }
 
-// New returns new chakra of single buffer
+// New returns new Cheetah  of single buffer
 // single for fast process 😄
-func New[T any]() *Chakra[T] {
-	return &Chakra[T]{
+func New[T any]() *Cheetah[T] {
+	return &Cheetah[T]{
 		subscribers: make(map[string]map[chan *T]struct{}, 1),
 	}
 }
 
 // Subscribe returns a buffered channel that receives published values for key
-func (l *Chakra[T]) Subscribe(key string) chan *T {
+func (l *Cheetah[T]) Subscribe(key string) chan *T {
 	ch := make(chan *T, 1)
 	l.mu.Lock()
 	defer l.mu.Unlock()
@@ -32,28 +31,25 @@ func (l *Chakra[T]) Subscribe(key string) chan *T {
 	return ch
 }
 
-// KageBunshinNoJutsu sends results to all subscribers of key. Never blocks.
-// KageBunshinNoJutsu or MultiShadowCloneJutsu or publish
-func (l *Chakra[T]) KageBunshinNoJutsu(key string, val *T) {
-	log.Println("in publish")
+// Publish sends results to all subscribers of key. Never blocks.
+func (l *Cheetah[T]) Publish(key string, parcel *T) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	for ch := range l.subscribers[key] {
 		select {
-		case ch <- val:
+		case ch <- parcel:
 		default:
 		}
 	}
 }
 
-// Kai removes and closes the channel for key
-// Kai or dispell or unsub
-func (l *Chakra[T]) Kai(key string, ch chan *T) {
+// Unsubscribe removes and closes the channel for key
+func (l *Cheetah[T]) Unsubscribe(key string, body chan *T) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	if sub, ok := l.subscribers[key]; ok {
-		delete(sub, ch)
-		close(ch)
+		delete(sub, body)
+		close(body)
 		if len(sub) == 0 {
 			delete(l.subscribers, key)
 		}

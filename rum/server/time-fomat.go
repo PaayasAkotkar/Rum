@@ -7,11 +7,11 @@ import "time"
 // ActivateAfter: if Deactivate is true and ActivateAfter is set,
 // the service will be re-activated after the duration (acts as sleep/wake)
 type TimeFormat struct {
-	Call          time.Duration
-	ActivateAfter *time.Duration
-	Deactivate    bool
-	Remove        bool
-	Retry         *RetryPolicy // nil = no retry
+	Call time.Duration
+	// ActivateAfter *time.Duration
+	// Deactivate    bool
+	// Remove        bool
+	Retry *RetryPolicy // nil = no retry
 }
 
 func NewTimeFormat() *TimeFormat {
@@ -20,18 +20,19 @@ func NewTimeFormat() *TimeFormat {
 
 // set funcs
 
-func (t *TimeFormat) SetCallTime(d time.Duration) {
-	t.Call = d
-}
-func (t *TimeFormat) SetActivateTime(d time.Duration) {
-	t.ActivateAfter = &d
-}
-func (t *TimeFormat) SetDeactivate(b bool) {
-	t.Deactivate = b
-}
-func (t *TimeFormat) SetRemove(b bool) {
-	t.Remove = b
-}
+// func (t *TimeFormat) SetCallTime(d time.Duration) {
+// 	t.Call = d
+// }
+// func (t *TimeFormat) SetActivateTime(d time.Duration) {
+// 	t.ActivateAfter = &d
+// }
+// func (t *TimeFormat) SetDeactivate(b bool) {
+// 	t.Deactivate = b
+// }
+// func (t *TimeFormat) SetRemove(b bool) {
+// 	t.Remove = b
+// }
+
 func (t *TimeFormat) SetRetry(r *RetryPolicy) {
 	t.Retry = r
 }
@@ -40,18 +41,18 @@ func (t *TimeFormat) SetRetry(r *RetryPolicy) {
 
 // get funcs
 
-func (t *TimeFormat) GetCallTime() time.Duration {
-	return t.Call
-}
-func (t *TimeFormat) GetActivateTime() *time.Duration {
-	return t.ActivateAfter
-}
-func (t *TimeFormat) ShouldDeactivate() bool {
-	return t.Deactivate
-}
-func (t *TimeFormat) ShouldRemove() bool {
-	return t.Remove
-}
+// func (t *TimeFormat) GetCallTime() time.Duration {
+// 	return t.Call
+// }
+// func (t *TimeFormat) GetActivateTime() *time.Duration {
+// 	return t.ActivateAfter
+// }
+// func (t *TimeFormat) ShouldDeactivate() bool {
+// 	return t.Deactivate
+// }
+// func (t *TimeFormat) ShouldRemove() bool {
+// 	return t.Remove
+// }
 
 // end
 

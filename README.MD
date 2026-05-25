@@ -1,12 +1,9 @@
 ## RUM
-<div align="center">
-<img src="./image/rum.png" alt="RUM Logo" width="132" height="132">
-</div>
 
 ## Theme 🎨
-RUM [run your models] provides the robust way to manage many agent models at once.
-It allows one single server to handle the flow of stream; the 
-call can be managed via client.
+Rum provides the robust way to manage many model bots at once.
+It allows one single server to handle the flow of stream that 
+can be managed via client.
 
 ## Motivation 🔥
 
@@ -14,7 +11,8 @@ call can be managed via client.
 
 <div align="center"><b>Beginning....</b></div>
 
-Since the day one when I started researching about RAG and reading research papers from [alphaxiv](https://www.alphaxiv.org/) I noticed that each model has their own attribute than I thought of creating a life cycle to monitor these models and have control when to stop and when to activate. I wanted something that can be controllable since first request without using if else statement.
+Since the day one when I started researching about RAG and reading research papers from [alphaxiv](https://www.alphaxiv.org/) I noticed that each model has their own attribute. Then I was wondering how can I reduce the gap of communication and create a robust & reusable pattern. So the first thing I came up with is [In, Out] which basically cleared my view that struct[In, Out] will be helpful than providing any complex stuff. The generic pattern for [In, Out] is created so that one single family is created in hierarchy and many more models can be implemented using one single family hierarchy than different family.
+
 <br>
 <div align="center"><b>Why Milvus as Search Engine?</b></div>
 
@@ -25,21 +23,13 @@ The next thing was to figure out the search engine to allow the user to freely u
 
 The idea is kept simple — monitor the attributes and allow a robust hierarchy to manage the models or agents. To make things simple gRPC was introduced so that calls can be made from anywhere to support one single server. With this setup the headache of creating many servers to support different agents or models has been solved and you achieve a simple reusable handler for those models.
 
-<p align="center">
-<b>The hierarchy:</b>
-<br>
-RUM[In, Out]
-<br>
+The hierarchy is:
+Rum[In, Out]
 └── Profile
-<br>
 └── Kit
-<br>
 └── Service
-<br>
 └── Dispatcher
-<br>
 └── IRegister[In, Out]  ← your model func lives here
-</p>
 
 <br>
 <div align="center"><b>Flow</b></div>
@@ -55,7 +45,7 @@ Note: keep [In & Out] same for each model so that you can push many profiles.
 <br>
 4. Paper blocks until all registered funcs complete
 <br>
-5. Result carries the full metric report + output of that func — client decides what to do with it
+5. Result carries the full metric report — client decides what to do with it
 </p>
 
 <br>
@@ -66,7 +56,7 @@ Client [grpc client anywhere]
 <br>
 ↓ 
 <br>
-RUM Server [grpc server]
+Rum Server [grpc server]
 <br>
 ↓
 <br>
@@ -74,11 +64,11 @@ Hub() — single event loop
 <br>
 ↓
 <br>
-POST() → write() — runs all the active registered funcs as per the rankings on set description
+POST() → write() — runs all registered funcs
 <br>
 ↓
 <br>
-Chakra — internal pubsub (nanoseconds)
+Light.Publish() — internal pubsub (nanoseconds)
 <br>
 ↓
 <br>
@@ -105,16 +95,7 @@ Server owns the result
 |---|---|---|
 | Embedder | Upcoming | One single embedder for all models |
 | Cluster | Upcoming | One Cluster to scale the service |
-|ServerRUM|Upcoming| Reduce complexity for server->client communication |
-
-
-## New 😎
-| Feature | Version | Desc |
-|---|---|---|
-| RUM | v1 | can now monitor the func performance |
-| Dog | v1 | monitors the func performance  |
-| Chakra | v1 | internal pub-sub system |
-|Paint | v1| css-alike style sheet for terminal |
+|ServerRum|Upcoming| Reduce complexity for server->client communication |
 <div align="center">
 <footer>@copyright 2026; created with imagination and coded with passion ✏️</footer>
 </div>

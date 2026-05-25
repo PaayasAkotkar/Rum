@@ -1,4 +1,4 @@
-package main
+package example
 
 import (
 	"context"
@@ -10,7 +10,6 @@ import (
 	rumrpc "rum/app/misc/rum"
 	"rum/app/rum/client"
 	rum "rum/app/rum/server"
-	e "rum/app/search-manager"
 	"strings"
 	"sync"
 	"syscall"
@@ -61,8 +60,10 @@ type RespX struct {
 	BestPractice *ChessCoachReply       `json:"bestPractice,omitempty"`
 	MiscItems    []*ChessCoachMiscEntry `json:"miscItems,omitempty"`
 }
+
 type Resp struct {
-	Stored []e.Object `json:"stored"`
+	// Stored []e.Object `json:"stored"`
+	Info string `json:"info"`
 }
 
 type Req struct {
@@ -82,14 +83,16 @@ const (
 	API   = ""
 )
 
-func playRum() {
+var wg sync.WaitGroup
+
+func PlayRum() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
 	addr := "localhost:9300"
 	profName := "test_profile"
-	bu := "test_bucket"
+	// bu := "test_bucket"
 
 	// gen := genkit.Init(ctx,
 	// 	genkit.WithPlugins(&googlegenai.GoogleAI{APIKey: API}), // Uses GEMINI_API_KEY from env
@@ -98,11 +101,11 @@ func playRum() {
 
 	// initGeminiFlow(gen)
 
-	engine, _ := e.NewHybridSearch(ctx, "localhost:19530", "", "", bu, e.DefaultDim)
-	store := rum.NewRumStore[Req, *Resp](ctx, engine)
+	// engine, _ := e.NewHybridSearch(ctx, "localhost:19530", "", "", bu, e.DefaultDim)
+	store := rum.NewRumStore[Req, *Resp](ctx)
 	profile := rum.NewProfile[Req, *Resp]()
-	kit := rum.NewKit[Req, *Resp](MODEL)
-	kit.SetBucket(bu)
+	kit := rum.NewKit[Req, *Resp]()
+	// kit.SetBucket(bu)
 	service := rum.NewService[Req, *Resp](ctx, rum.Settings{}, "gem-ser")
 	dispatch := rum.NewDispatcher[Req, *Resp](rum.Settings{})
 
@@ -113,16 +116,17 @@ func playRum() {
 			req.Query = &q
 		}
 
-		objs := dummyObjects()
+		// objs := dummyObjects()
 		var resp = Resp{
-			Stored: objs,
+			Info: fmt.Sprintf("hey there client request %s profile with query %s", req.Profile, *req.Query),
 		}
-		for _, obj := range objs {
-			_, err := store.Store(req.Profile, obj.Embedding, obj.ID, obj.Text, obj.Response, obj.Branch, obj.DocType)
-			if err != nil {
-				return nil, err
-			}
-		}
+
+		// for _, obj := range objs {
+		// 	_, err := store.Store(req.Profile, obj.Embedding, obj.ID, obj.Text, obj.Response, obj.Branch, obj.DocType)
+		// 	if err != nil {
+		// 		return nil, err
+		// 	}
+		// }
 
 		return &resp, nil
 	}
@@ -138,9 +142,8 @@ func playRum() {
 
 	rumx := rum.New(ctx, store)
 
-	var wg sync.WaitGroup
-
 	wg.Add(3)
+
 	go func() {
 		defer wg.Done()
 		rumx.Serve(ctx, rum.RumServer{
@@ -151,8 +154,13 @@ func playRum() {
 
 	go func() {
 		defer wg.Done()
-		time.Sleep(time.Second * 2)
-		res := rumx.Paper(seq)
+		// you can uncomment to view the poll
+		// what it does it keeps the pubsub on
+
+		// time.Sleep(time.Second * 2)
+		res := <-rumx.Poll(seq)
+		// res := rumx.Paper(seq)
+
 		if res.IsReady {
 			log.Println("metric: ", res.Metric.JSON())
 			log.Println("result: ", string(res.Result))
@@ -161,7 +169,7 @@ func playRum() {
 
 	go func() {
 		defer wg.Done()
-		time.Sleep(time.Second * 3)
+		// time.Sleep(time.Second * 3)
 		var req Req
 		id := "texs1121"
 		name := "testRozman"
@@ -183,8 +191,38 @@ func playRum() {
 			},
 			Push: true,
 		}
-		client.POST(addr, []*rumrpc.IPost{&post})
+		if err := client.POST(addr, []*rumrpc.IPost{&post}); err != nil {
+			log.Println("error: ", err)
+		}
+	}()
 
+	go func() {
+		defer wg.Done()
+		time.Sleep(time.Second * 3)
+		var req Req
+		id := "texs1121"
+		name := "testRozman"
+		query := "bro is the goat of chess?"
+		req.ID = &id
+		req.Name = &name
+		req.Query = &query
+		req.Profile = seq.Name
+		parcel, err := json.Marshal(req)
+		if err != nil {
+			log.Println("marshal error", err)
+			return
+		}
+		post := rumrpc.IPost{
+			Profile: &rumrpc.ISequence{
+				Name:  seq.Name,
+				Rank:  int32(seq.Rank),
+				Input: parcel,
+			},
+			Push: true,
+		}
+		if err := client.POST(addr, []*rumrpc.IPost{&post}); err != nil {
+			log.Println("error: ", err)
+		}
 	}()
 
 	wg.Wait()

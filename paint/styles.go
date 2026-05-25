@@ -38,7 +38,7 @@ func Header(header string) string {
 	p := lipgloss.NewStyle().
 		Padding(0, 2).
 		Render(p1)
-	return p
+	return "\n" + p
 }
 func Title(title string) string {
 	headerStyle := lipgloss.NewStyle().
@@ -55,10 +55,10 @@ func Title(title string) string {
 	titleStr := strings.ToUpper(title)
 	renderedHeader := headerStyle.Render(titleStr)
 
-	return renderedHeader
+	return "\n" + renderedHeader
 }
 
-func Table(title string, headers []string, data [][]string) *table.Table {
+func Table(title string, headers []string, data [][]string) string {
 	CapitalizeHeaders := func(data []string) []string {
 		for i := range data {
 			data[i] = strings.ToUpper(data[i])
@@ -73,7 +73,7 @@ func Table(title string, headers []string, data [][]string) *table.Table {
 		BorderForeground(lipgloss.Color(colors().Blue.A1)). // Match border to background for a "pill" look
 		Align(lipgloss.Center).
 		Width(20)
-	lipgloss.Println(text.Render(title))
+	// lipgloss.Println("\n" + text.Render(title))
 
 	headerStyle := lipgloss.NewStyle().Bold(true).Align(lipgloss.Center)
 	borderStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(colors().Green.A1)).Bold(true).Align(lipgloss.Center)
@@ -84,7 +84,7 @@ func Table(title string, headers []string, data [][]string) *table.Table {
 		}
 		return lipgloss.NewStyle().Align(lipgloss.Center)
 	})
-	return pencil
+	return "\n" + text.Render(title) + "\n" + pencil.String()
 }
 
 func Card(title, desc string) string {
@@ -107,5 +107,5 @@ func Card(title, desc string) string {
 	)
 
 	p := pencil.Render(content)
-	return p
+	return "\n" + p
 }

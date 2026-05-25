@@ -3,7 +3,8 @@ package rum
 import (
 	"context"
 	"log"
-	rumchakra "rum/app/chakra"
+	cheetah "rum/app/cheetah"
+	injection "rum/app/di"
 	rumrpc "rum/app/misc/rum"
 	rumpaint "rum/app/paint"
 	"strings"
@@ -15,9 +16,11 @@ import (
 type Rum[In, Out any] struct {
 	rumrpc.UnimplementedOnRumServiceServer
 
+	DI *injection.Client
+
 	// light *Light[In, IDispatchResult]
-	chakra *rumchakra.Chakra[IDispatchResult]
-	store  *RumStore[In, Out]
+	cheetah *cheetah.Cheetah[IDispatchResult]
+	store   *RumStore[In, Out]
 
 	post              chan ILinks[In, Out]
 	deleteService     chan ILinks[In, Out]
@@ -46,7 +49,7 @@ func New[In, Out any](ctx context.Context, store *RumStore[In, Out]) *Rum[In, Ou
 	return &Rum[In, Out]{
 		store: store,
 		// light:             NewLight[In, IDispatchResult](),
-		chakra:            rumchakra.New[IDispatchResult](),
+		cheetah:           cheetah.New[IDispatchResult](),
 		post:              make(chan ILinks[In, Out]),
 		deleteService:     make(chan ILinks[In, Out]),
 		activateService:   make(chan ILinks[In, Out]),
@@ -55,23 +58,16 @@ func New[In, Out any](ctx context.Context, store *RumStore[In, Out]) *Rum[In, Ou
 		activateProfile:   make(chan ILinks[In, Out]),
 		deactivateProfile: make(chan ILinks[In, Out]),
 		ctx:               ctx,
+		DI:                injection.NewClient(ctx, "rum-server"),
 	}
 }
 
-// Paper monitors the profile and returns the result of the serivce of created event
-func (r *Rum[In, Out]) Paper(profile ISequence[In]) *IDispatchResult {
-	log.Println("in tick fetch")
-	return r.tickFetch(profile)
-}
-
-func (r *Rum[In, Out]) tickFetch(profile ISequence[In]) *IDispatchResult {
-	// Use only Name+Rank for pub/sub and profile lookup — Input is a pointer
-	// whose address won't match between subscriber and publisher.
+func (r *Rum[In, Out]) fetch(profile ISequence[In]) *IDispatchResult {
 
 	// ch := r.light.Subscribe(key)
 	// defer r.light.Unsub(key, ch)
-	ch := r.chakra.Subscribe(profile.Name)
-	defer r.chakra.Kai(profile.Name, ch)
+	ch := r.cheetah.Subscribe(profile.Name)
+	defer r.cheetah.Unsubscribe(profile.Name, ch)
 	for {
 		select {
 		case <-r.ctx.Done():
@@ -83,4 +79,17 @@ func (r *Rum[In, Out]) tickFetch(profile ISequence[In]) *IDispatchResult {
 			}
 		}
 	}
+}
+
+func (r *Rum[In, Out]) tickFetchPoll(profile ISequence[In]) <-chan *IDispatchResult {
+	// Use only Name+Rank for pub/sub and profile lookup
+	ch := r.cheetah.Subscribe(profile.Name)
+
+	// Unsubscribe when the server context is cancelled
+	go func() {
+		<-r.ctx.Done()
+		r.cheetah.Unsubscribe(profile.Name, ch)
+	}()
+
+	return ch
 }

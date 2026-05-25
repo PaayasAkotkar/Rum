@@ -1,5 +1,5 @@
-// Package chakra implements the pubsub-systems
-package chakra
+// Package cheetah implements the pubsub-systems
+package cheetah
 
 // flow:
 // -----------------------------------------------
@@ -7,8 +7,5 @@ package chakra
 //        track the internal Subscriber
 //                      &
 //              Pass the result
-// -----------------------------------------------
-// -----------------------------------------------
-// work-in-progress on edo tensei 😎
 // -----------------------------------------------
 // -----------------------------------------------

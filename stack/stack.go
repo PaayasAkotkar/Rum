@@ -1,7 +1,7 @@
+// Package stack Simple Stack implementation
 package stack
 
 import (
-	"slices"
 	"sync"
 )
 
@@ -96,24 +96,48 @@ func (s *Stack[T]) Erase(name T) {
 }
 
 // Rearrange moves the [from, to] range to the front
-func (s *Stack[T]) Rearrange(from T, to T) {
+// swap the position from this rank to this rank
+// example: [5,4,3,2,1] -> [3,4] -> [2,1,5,4,3]
+// note: toIndex is considered whole number -> if 4 than 4+1 than 4 be careful
+func (s *Stack[T]) Rearrange(from int, to int) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	fIdx := slices.Index(s.data, from)
-	tIdx := slices.Index(s.data, to)
-	if fIdx == -1 || tIdx == -1 || fIdx > tIdx {
+	if from > s.len() || to > s.len() {
 		return
 	}
 
-	priority := make([]T, tIdx-fIdx+1)
-	copy(priority, s.data[fIdx:tIdx+1])
+	priority := make([]T, to-from+1)
+	copy(priority, s.data[from:to+1])
 
-	remaining := make([]T, 0, len(s.data)-(tIdx-fIdx+1))
-	remaining = append(remaining, s.data[:fIdx]...)
-	remaining = append(remaining, s.data[tIdx+1:]...)
+	remaining := make([]T, 0, to-from+1)
+	remaining = append(remaining, s.data[:from]...)
+	remaining = append(remaining, s.data[to+1:]...)
 
 	s.data = append(priority, remaining...)
+}
+
+// PushLast current rank-0 to last
+// example: [5,4,3,2,1] -> [4,3,2,1,5]
+func (s *Stack[T]) PushLast() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.empty() {
+		return
+	}
+
+	first := s.data[0]
+	copy(s.data, s.data[1:])
+	s.data[s.len()-1] = first
+}
+
+func (s *Stack[T]) Replace(index int, value T) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if index > s.len() {
+		return
+	}
+	s.data[index] = value
 }
 
 // end

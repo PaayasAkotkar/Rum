@@ -11,8 +11,7 @@ can be managed via client.
 
 <div align="center"><b>Beginning....</b></div>
 
-Since the day one when I started researching about RAG and reading research papers from [alphaxiv](https://www.alphaxiv.org/) I noticed that each model has their own attribute. Then I was wondering how can I reduce the gap of communication and create a robust & reusable pattern. So the first thing I came up with is [In, Out] which basically cleared my view that struct[In, Out] will be helpful than providing any complex stuff. The generic pattern for [In, Out] is created so that one single family is created in hierarchy and many more models can be implemented using one single family hierarchy than different family.
-
+Since the day one when I started researching about RAG and reading research papers from [alphaxiv](https://www.alphaxiv.org/) I noticed that each model has their own attribute than I thought of creating a life cycle to monitor these models and have control when to stop and when to activate. I wanted something that can be controllable since first request without using if else statement.
 <br>
 <div align="center"><b>Why Milvus as Search Engine?</b></div>
 
@@ -95,7 +94,16 @@ Server owns the result
 |---|---|---|
 | Embedder | Upcoming | One single embedder for all models |
 | Cluster | Upcoming | One Cluster to scale the service |
-|ServerRum|Upcoming| Reduce complexity for server->client communication |
+|ServerRUM|Upcoming| Reduce complexity for server->client communication |
+
+
+## New 😎
+| Feature | Version | Desc |
+|---|---|---|
+| RUM | v1 | can now monitor the func performance |
+| Dog | v1 | monitors the func performance  |
+| Chakra | v1 | internal pub-sub system |
+|Paint | v1| css-alike style sheet for terminal |
 <div align="center">
-<footer>@copyright 2026; created with imagination and coded with passion ✏️</footer>
+<footer>Apache License 2026; created with imagination and coded with passion</footer>
 </div>
